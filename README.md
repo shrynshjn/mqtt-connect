@@ -1,0 +1,1 @@
+An app that lets you store your MQTT credentials, with topics to subscribe and publish.
