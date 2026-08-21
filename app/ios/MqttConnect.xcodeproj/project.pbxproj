@@ -273,7 +273,7 @@
 				DEVELOPMENT_TEAM = 7XARXU7L8P;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = MqttConnect/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "MQTT Connect";
+				INFOPLIST_KEY_CFBundleDisplayName = "MQTT Connect: Secure";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -309,7 +309,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7XARXU7L8P;
 				INFOPLIST_FILE = MqttConnect/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "MQTT Connect";
+				INFOPLIST_KEY_CFBundleDisplayName = "MQTT Connect: Secure";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
