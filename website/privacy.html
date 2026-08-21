@@ -1,0 +1,140 @@
+<title>Privacy Policy — MQTT Connect</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="MQTT Connect privacy policy: no accounts, no analytics, no cloud sync. Broker credentials and certificates stay encrypted on your device." />
+<link rel="icon" href="assets/img/icon-1024.png" />
+<link rel="apple-touch-icon" href="assets/img/icon-1024.png" />
+<link rel="stylesheet" href="assets/css/style.css" />
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img src="assets/img/icon-1024.png" alt="MQTT Connect logo" />
+      MQTT Connect
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#security">Security</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </nav>
+    <a class="nav-cta" href="index.html#get">Get the app</a>
+  </div>
+</header>
+
+<div class="legal-head">
+  <div class="wrap">
+    <h1>Privacy Policy</h1>
+    <p class="legal-meta">Last updated August 21, 2026 · applies to MQTT Connect for iOS and Android</p>
+  </div>
+</div>
+
+<main class="wrap legal-body">
+  <div class="callout">
+    <p><strong>In short:</strong> MQTT Connect doesn't have a server. There's no account, no analytics, and no cloud
+    sync. Your broker profiles, credentials and certificates are encrypted and stored only on your device. The only
+    network traffic the app generates is the MQTT connection you point it at, to the broker you configure.</p>
+  </div>
+
+  <div class="toc">
+    <div>On this page</div>
+    <ol>
+      <li><a href="#collect">What we collect</a></li>
+      <li><a href="#device">What's stored on your device</a></li>
+      <li><a href="#network">Network &amp; broker traffic</a></li>
+      <li><a href="#certs">Certificates &amp; private keys</a></li>
+      <li><a href="#export">Export &amp; deletion</a></li>
+      <li><a href="#biometrics">Biometrics &amp; device locks</a></li>
+      <li><a href="#sharing">Third parties &amp; data sharing</a></li>
+      <li><a href="#children">Children's privacy</a></li>
+      <li><a href="#changes">Changes to this policy</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <h2 id="collect">1. What we collect</h2>
+  <p>We — the developer of MQTT Connect — collect nothing. The app does not include analytics, crash-reporting,
+  advertising, or telemetry SDKs of any kind, and it does not communicate with any server operated by us. We have no
+  account system, so we never see your name, email, device identifier, or usage activity. Nothing about how you use
+  the app is transmitted anywhere for us to receive.</p>
+
+  <h2 id="device">2. What's stored on your device</h2>
+  <p>To function, MQTT Connect stores the following information locally, on your device only:</p>
+  <ul>
+    <li><strong>Broker profiles</strong> — name, host, port, transport (TCP/TLS/WS/WSS), MQTT protocol version, client ID, and connection options you configure.</li>
+    <li><strong>Credentials</strong> — usernames and passwords for broker authentication, encrypted at rest using the operating system's secure storage (the iOS/Android keychain) combined with encrypted local storage.</li>
+    <li><strong>Certificates &amp; keys</strong> — CA certificates, client certificates, and private keys you import for TLS/mTLS connections (see §4).</li>
+    <li><strong>Topics &amp; message history</strong> — subscribed topics, saved topic suggestions, publish snippets, and a rolling buffer of recently sent/received messages, kept only for your own reference within the app.</li>
+    <li><strong>App preferences</strong> — settings like Face ID lock, auto-lock timeout, and message buffer size.</li>
+  </ul>
+  <p>All of the above lives in encrypted local storage and the platform keychain on your device. None of it is synced
+  to a cloud service, backed up to a server we operate, or accessible to us. Uninstalling the app removes it.</p>
+
+  <h2 id="network">3. Network &amp; broker traffic</h2>
+  <p>The only network connections MQTT Connect initiates are the ones you configure: a connection to the MQTT broker
+  host and port you enter in a broker profile, using the transport and credentials you supply. Any data you publish
+  or subscribe to is sent directly between your device and that broker — it does not pass through us or any server we
+  control. The security and retention practices of that data are governed by the operator of the broker you connect
+  to, not by this policy.</p>
+
+  <h2 id="certs">4. Certificates &amp; private keys</h2>
+  <p>When you import a CA certificate, client certificate, private key, or a <code>.p12</code> bundle — whether by
+  picking a file, pasting PEM text, or unlocking a passphrase-protected key — the file is read once through the
+  system file picker and its contents are written directly into the device keychain. The original file is never
+  copied elsewhere by the app, never leaves your device, and is excluded from the profile export feature described
+  below.</p>
+
+  <h2 id="export">5. Export &amp; deletion</h2>
+  <p>Settings includes an <strong>Export profiles (no secrets)</strong> option, which lets you export your broker
+  configuration (host, port, transport, topic lists, etc.) without passwords, private keys, or certificates — useful
+  for moving profiles between devices without exposing credentials.</p>
+  <p>Settings also includes an <strong>Erase all data</strong> option, which permanently deletes every profile,
+  credential, certificate, and message stored by the app on that device. This action is irreversible and, because we
+  hold no copy of your data, cannot be undone by us either.</p>
+
+  <h2 id="biometrics">6. Biometrics &amp; device locks</h2>
+  <p>You may enable Face ID / biometric authentication to open the app, an auto-lock timer, and an option to hide
+  message payloads while the app is in the background (e.g. in the OS app switcher). Biometric data itself is
+  processed entirely by your device's operating system — the app never receives or stores your biometric data; it
+  only receives a yes/no authentication result from the OS.</p>
+
+  <h2 id="sharing">7. Third parties &amp; data sharing</h2>
+  <p>We do not sell, rent, or share any data, because we do not collect or have access to any. The app does not
+  integrate any third-party analytics, advertising, or data-broker SDKs. The MQTT broker(s) you configure are
+  third-party services you choose to connect to, and are outside our control — review their own privacy practices
+  separately.</p>
+
+  <h2 id="children">8. Children's privacy</h2>
+  <p>MQTT Connect is a technical tool intended for developers and operators configuring MQTT infrastructure, and is
+  not directed at children. Since we collect no data from any user, we do not knowingly collect data from children
+  either.</p>
+
+  <h2 id="changes">9. Changes to this policy</h2>
+  <p>If this policy changes, we'll update the "Last updated" date at the top of this page and, for material changes,
+  note it in the app's release notes. Continued use of the app after a change constitutes acceptance of the revised
+  policy.</p>
+
+  <h2 id="contact">10. Contact</h2>
+  <p>Questions about this policy or the app's data handling can be sent to
+  <a href="mailto:shreyansh@alistetechnologies.com">shreyansh@alistetechnologies.com</a>.</p>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="brand">
+        <img src="assets/img/icon-1024.png" alt="MQTT Connect logo" />
+        MQTT Connect
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Use</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 MQTT Connect. All rights reserved.</span>
+      <span>Built offline-first · no telemetry</span>
+    </div>
+  </div>
+</footer>

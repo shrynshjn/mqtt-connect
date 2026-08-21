@@ -1,0 +1,274 @@
+<title>MQTT Connect</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="MQTT Connect is a native iOS &amp; Android client for MQTT brokers — multiple broker profiles, mTLS client certificates, a live message feed, and a publish composer. Everything stored encrypted on-device, offline, no telemetry." />
+<link rel="icon" href="assets/img/icon-1024.png" />
+<link rel="apple-touch-icon" href="assets/img/icon-1024.png" />
+<meta property="og:title" content="MQTT Connect" />
+<meta property="og:description" content="A fast, secure MQTT client for iOS and Android. Stored on device, encrypted at rest, no cloud sync." />
+<meta property="og:image" content="assets/img/icon-1024.png" />
+<link rel="stylesheet" href="assets/css/style.css" />
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img src="assets/img/icon-1024.png" alt="MQTT Connect logo" />
+      MQTT Connect
+    </a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#security">Security</a>
+      <a href="#screens">Screens</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </nav>
+    <a class="nav-cta" href="#get">Get the app</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span> MQTT 3.1.1 &amp; 5.0 · TLS &amp; mTLS</span>
+        <h1>Every broker.<br />One <span>encrypted</span> hub.</h1>
+        <p class="lede">
+          MQTT Connect is a native client for managing broker profiles, subscribing to topics, and publishing
+          messages — with client certificates, a live message feed, and everything stored encrypted on your device.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#get" id="get">Download the app</a>
+          <a class="btn btn-ghost" href="#screens">See it in action</a>
+        </div>
+        <p class="store-note">iOS &amp; Android · offline-first · no account required</p>
+
+        <div class="stat-strip">
+          <div><strong>0</strong>trackers or analytics SDKs</div>
+          <div><strong>256-bit</strong>encryption at rest</div>
+          <div><strong>4</strong>transports — TCP · TLS · WS · WSS</div>
+        </div>
+      </div>
+
+      <div class="device">
+        <div class="glow-orb"></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="screen-head">
+              <div class="screen-title">Connections</div>
+              <div class="screen-gear">⚙︎</div>
+            </div>
+            <div class="screen-summary">2 live · 7 subscriptions · 3 profiles</div>
+            <div class="screen-list">
+              <div class="card">
+                <div class="card-top">
+                  <div class="status-dot live"></div>
+                  <div class="card-name">Factory Floor — Line 3</div>
+                  <div class="card-chip">live</div>
+                  <div class="card-badge">128</div>
+                </div>
+                <div class="card-host">tls://broker.line3.internal:8883&nbsp;&nbsp;▣ cert</div>
+                <div class="card-stats">
+                  <span>4 subs</span><span>128 msgs</span><span>2h 14m</span>
+                  <span class="grow"></span>
+                  <span class="card-action">Disconnect</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-top">
+                  <div class="status-dot live"></div>
+                  <div class="card-name">Home Assistant</div>
+                  <div class="card-chip">live</div>
+                  <div class="card-badge">36</div>
+                </div>
+                <div class="card-host">wss://home.example.net:443</div>
+                <div class="card-stats">
+                  <span>3 subs</span><span>36 msgs</span><span>41m</span>
+                  <span class="grow"></span>
+                  <span class="card-action">Disconnect</span>
+                </div>
+              </div>
+
+              <div class="card fault">
+                <div class="card-top">
+                  <div class="status-dot fault"></div>
+                  <div class="card-name">Staging Broker</div>
+                  <div class="card-chip">fault</div>
+                </div>
+                <div class="card-host">tls://staging.mqtt.io:8883</div>
+                <div class="card-stats">
+                  <span>2 saved</span><span>last ok 3d ago</span>
+                  <span class="grow"></span>
+                  <span class="card-action">Retry</span>
+                </div>
+                <div class="fault-banner">connect ECONNREFUSED · check firewall / port 8883</div>
+              </div>
+
+              <div class="add-row">Add broker profile</div>
+              <div class="footer-note">Stored on device · encrypted at rest<br />no cloud sync</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="tag">Features</span>
+        <h2>Built for people who actually run brokers.</h2>
+        <p>Every screen is designed around the workflow of debugging and operating real MQTT deployments — not a toy demo client.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="icon">◆</div>
+          <h3>Unlimited broker profiles</h3>
+          <p>Keep every environment — production, staging, home lab — one tap away, each with its own transport, auth, and live status.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">⌁</div>
+          <h3>TCP, TLS, WS &amp; WSS</h3>
+          <p>Full MQTT 3.1.1 and 5.0 support over every standard transport, with per-profile keep-alive, clean-session, and timeout controls.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">▣</div>
+          <h3>Client certificates &amp; mTLS</h3>
+          <p>Import CA certs, client certs and keys from PEM, paste them directly, or unlock a <code style="font-family:var(--mono);font-size:12px;color:var(--text)">.p12</code> bundle in one step.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">≋</div>
+          <h3>Live message feed</h3>
+          <p>Watch subscribed topics stream in real time, expand any message for QoS, retain flag and payload, and re-send or edit-and-send instantly.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">▤</div>
+          <h3>Publish composer</h3>
+          <p>Compose JSON, text, or Base64 payloads with topic autocomplete drawn from your history, and pin frequent sends as snippets.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">⏣</div>
+          <h3>Smart topic suggestions</h3>
+          <p>Subscriptions and publishes both surface topics you've used before on that broker, so you're never retyping long topic paths.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="security" class="security">
+    <div class="wrap security-grid">
+      <div>
+        <span class="tag">Security &amp; privacy</span>
+        <h2>Your credentials never leave your device.</h2>
+        <p style="color:var(--text-secondary); font-size:15px;">
+          There's no account, no backend, and nothing phoning home. MQTT Connect only talks to the brokers you configure.
+        </p>
+        <div class="security-list">
+          <div class="security-item">
+            <div class="mark">✓</div>
+            <div><strong>Encrypted at rest</strong><p>Broker profiles, usernames, passwords and certificates are held in the OS keychain and encrypted storage — never in plain text.</p></div>
+          </div>
+          <div class="security-item">
+            <div class="mark">✓</div>
+            <div><strong>Offline, no telemetry</strong><p>No analytics SDKs, no crash reporters phoning a server, no usage tracking of any kind.</p></div>
+          </div>
+          <div class="security-item">
+            <div class="mark">✓</div>
+            <div><strong>Face ID &amp; auto-lock</strong><p>Gate the app behind biometrics, auto-lock after inactivity, and hide payload previews in the app switcher.</p></div>
+          </div>
+          <div class="security-item">
+            <div class="mark">✓</div>
+            <div><strong>Certificates stay put</strong><p>Client certificates and private keys are read once through the system file picker and never included in profile export.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="l1">$ mqtt-connect · settings · security</div>
+        <div><span class="prompt">›</span> Require Face ID to open&nbsp;&nbsp;&nbsp;<span class="ok">ON</span></div>
+        <div><span class="prompt">›</span> Lock after&nbsp;&nbsp;&nbsp;5 minutes</div>
+        <div><span class="prompt">›</span> Hide payloads in app switcher&nbsp;&nbsp;&nbsp;<span class="ok">ON</span></div>
+        <div>&nbsp;</div>
+        <div class="l1">$ mqtt-connect · settings · data</div>
+        <div><span class="prompt">›</span> Export profiles (no secrets)</div>
+        <div><span class="prompt">›</span> Erase all data&nbsp;&nbsp;&nbsp;<span class="warn">local only</span></div>
+        <div>&nbsp;</div>
+        <div class="l1">MQTT Connect 1.0 — offline · no telemetry</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="tag">Inside the app</span>
+        <h2>A workspace for every connection.</h2>
+        <p>Tabs for topics, publishing, and the live feed — all scoped to the broker profile you're working in.</p>
+      </div>
+      <div class="showcase-grid">
+        <div class="mini-screen">
+          <h4>Live feed</h4>
+          <div class="sub">factory-floor-line-3</div>
+          <div class="feed-row"><span class="t">14:02:11</span><span class="d">RX</span><span class="topic">line3/sensors/temp</span></div>
+          <div class="feed-row out"><span class="t">14:02:14</span><span class="d">TX</span><span class="topic">line3/cmd/reset</span></div>
+          <div class="feed-row"><span class="t">14:02:19</span><span class="d">RX</span><span class="topic">line3/sensors/humidity</span></div>
+          <div class="feed-row"><span class="t">14:02:24</span><span class="d">RX</span><span class="topic">line3/status/heartbeat</span></div>
+          <div class="chip-row"><span class="chip">Q1</span><span class="chip">retained</span><span class="chip">42 B</span></div>
+        </div>
+
+        <div class="mini-screen">
+          <h4>Publish</h4>
+          <div class="sub">line3/cmd/reset</div>
+          <div class="seg"><span>JSON</span><span class="on">Text</span><span>Base64</span></div>
+          <div class="payload-box">{
+  "reset": true,
+  "delay_ms": 500
+}</div>
+          <div class="chip-row"><span class="chip">QoS 1</span><span class="chip">retain off</span><span class="chip">pin to feed</span></div>
+        </div>
+
+        <div class="mini-screen">
+          <h4>Topics</h4>
+          <div class="sub">4 active · 9 saved</div>
+          <div class="feed-row"><span class="d" style="color:var(--accent)">●</span><span class="topic">line3/sensors/#</span><span class="t">Q1</span></div>
+          <div class="feed-row"><span class="d" style="color:var(--accent)">●</span><span class="topic">line3/status/heartbeat</span><span class="t">Q0</span></div>
+          <div class="feed-row"><span class="d" style="color:var(--text-tertiary)">○</span><span class="topic">line3/alerts/+</span><span class="t">Q2</span></div>
+          <div class="chip-row"><span class="chip">line3/sensors/temp</span><span class="chip">line3/cmd/reset</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="get">
+    <div class="wrap">
+      <div class="cta-band">
+        <h2>Take your brokers with you.</h2>
+        <p>MQTT Connect is built for iOS and Android — request access below.</p>
+        <div class="cta-row" style="justify-content:center;">
+          <a class="btn btn-primary" href="mailto:shreyansh@alistetechnologies.com?subject=MQTT%20Connect%20access">Request early access</a>
+          <a class="btn btn-ghost" href="privacy.html">Read the privacy policy</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="brand">
+        <img src="assets/img/icon-1024.png" alt="MQTT Connect logo" />
+        MQTT Connect
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#security">Security</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Use</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 MQTT Connect. All rights reserved.</span>
+      <span>Built offline-first · no telemetry</span>
+    </div>
+  </div>
+</footer>
