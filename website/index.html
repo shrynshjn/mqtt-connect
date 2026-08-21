@@ -1,7 +1,7 @@
 <title>MQTT Connect</title>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="MQTT Connect is a native iOS &amp; Android app for managing MQTT clients. Save a broker once, spin up clients that inherit its host, port and transport, add mTLS certificates, and watch a live message feed. Everything stored encrypted on-device, offline, no telemetry." />
+<meta name="description" content="MQTT Connect is a secure, offline-first MQTT client for iOS &amp; Android — mTLS client certificates, a live message feed, and a publish composer, with everything encrypted on-device. No cloud, no account, no telemetry." />
 <link rel="icon" href="assets/img/icon-1024.png" />
 <link rel="apple-touch-icon" href="assets/img/icon-1024.png" />
 <meta property="og:title" content="MQTT Connect" />
@@ -123,24 +123,9 @@
       </div>
       <div class="feature-grid">
         <div class="feature">
-          <div class="icon">◈</div>
-          <h3>Save a broker once</h3>
-          <p>Store a broker's domain, port and transport as a reusable broker profile — set it up once, then reuse it for every client that connects to it.</p>
-        </div>
-        <div class="feature">
-          <div class="icon">◆</div>
-          <h3>Unlimited clients</h3>
-          <p>Creating a client is just picking a saved broker — host, port and transport fill in automatically. Add its client ID, auth and live status, and you're connected.</p>
-        </div>
-        <div class="feature">
-          <div class="icon">⌁</div>
-          <h3>TCP, TLS, WS &amp; WSS</h3>
-          <p>Full MQTT 3.1.1 and 5.0 support over every standard transport, with per-client keep-alive, clean-session, and timeout controls.</p>
-        </div>
-        <div class="feature">
           <div class="icon">▣</div>
           <h3>Client certificates &amp; mTLS</h3>
-          <p>Import CA certs, client certs and keys from PEM, paste them directly, or unlock a <code style="font-family:var(--mono);font-size:12px;color:var(--text)">.p12</code> bundle in one step.</p>
+          <p>Import CA certs, client certs and keys from PEM, paste them directly, or unlock a <code style="font-family:var(--mono);font-size:12px;color:var(--text)">.p12</code> bundle in one step — full mutual TLS, no laptop required.</p>
         </div>
         <div class="feature">
           <div class="icon">≋</div>
@@ -153,9 +138,19 @@
           <p>Compose JSON, text, or Base64 payloads with topic autocomplete drawn from your history, and pin frequent sends as snippets.</p>
         </div>
         <div class="feature">
+          <div class="icon">⌁</div>
+          <h3>TCP, TLS, WS &amp; WSS</h3>
+          <p>Full MQTT 3.1.1 and 5.0 support over every standard transport, with per-client keep-alive, clean-session, and timeout controls.</p>
+        </div>
+        <div class="feature">
           <div class="icon">⏣</div>
           <h3>Smart topic suggestions</h3>
           <p>Subscriptions and publishes both surface topics you've used before on that client, so you're never retyping long topic paths.</p>
+        </div>
+        <div class="feature">
+          <div class="icon">◆</div>
+          <h3>Brokers &amp; clients, kept apart</h3>
+          <p>Save a broker's host, port and transport once, then create as many clients against it as you need — each with its own ID, auth and certs.</p>
         </div>
       </div>
     </div>
@@ -212,13 +207,12 @@
       </div>
       <div class="showcase-grid">
         <div class="mini-screen">
-          <h4>New client</h4>
-          <div class="sub">pick a broker — the rest fills in</div>
-          <div class="chip-row"><span class="chip accent">Broker: Factory Floor · TLS · 8883</span></div>
-          <div class="kv-row"><span class="k">Host</span><span class="v">broker.line3.internal</span></div>
-          <div class="kv-row"><span class="k">Port · transport</span><span class="v">8883 · TLS</span></div>
-          <div class="kv-row"><span class="k">Client ID</span><span class="v accent">mqtt-connect-4f21a9</span></div>
-          <div class="chip-row"><span class="chip">host · port · transport auto-filled</span></div>
+          <h4>Client certificate</h4>
+          <div class="sub">mTLS · factory-floor-line-3</div>
+          <div class="kv-row"><span class="k">CA certificate</span><span class="v accent">ca.pem ✓</span></div>
+          <div class="kv-row"><span class="k">Client certificate</span><span class="v accent">client.crt ✓</span></div>
+          <div class="kv-row"><span class="k">Client private key</span><span class="v accent">client.key ✓</span></div>
+          <div class="chip-row"><span class="chip">import .p12</span><span class="chip">paste PEM</span></div>
         </div>
 
         <div class="mini-screen">
