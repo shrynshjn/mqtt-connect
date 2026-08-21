@@ -1,17 +1,25 @@
 import React from 'react';
-import { NavigationContainer, DarkTheme, type Theme } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DarkTheme,
+  type Theme,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../ui/theme';
 import { HubScreen } from '../features/hub/HubScreen';
 import { WorkspaceScreen } from '../features/workspace/WorkspaceScreen';
 import { ProfileFormScreen } from '../features/profile/ProfileFormScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
+import { BrokersScreen } from '../features/brokers/BrokersScreen';
+import { BrokerFormScreen } from '../features/brokers/BrokerFormScreen';
 
 export type RootStackParamList = {
   Hub: undefined;
   Workspace: { profileId: string };
   ProfileForm: { profileId?: string };
   Settings: undefined;
+  Brokers: undefined;
+  BrokerForm: { brokerId?: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -34,8 +42,26 @@ export function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Hub" component={HubScreen} />
         <Stack.Screen name="Workspace" component={WorkspaceScreen} />
-        <Stack.Screen name="ProfileForm" component={ProfileFormScreen} options={{ presentation: 'modal' }} />
-        <Stack.Screen name="Settings" component={SettingsScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="ProfileForm"
+          component={ProfileFormScreen}
+          options={{ presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{ presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="Brokers"
+          component={BrokersScreen}
+          options={{ presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="BrokerForm"
+          component={BrokerFormScreen}
+          options={{ presentation: 'modal' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -28,9 +28,13 @@ function unwrapPkcs8ToRsaAsn1(pkcs8Asn1: forge.asn1.Asn1): forge.asn1.Asn1 {
  * the plan's transport risk section), so EC keys should be rejected loudly upstream of
  * this function with an actionable message rather than failing silently at connect time.
  */
-export function parsePrivateKeyPem(pem: string, passphrase?: string): ParsedKey {
+export function parsePrivateKeyPem(
+  pem: string,
+  passphrase?: string,
+): ParsedKey {
   const header = pemHeader(pem);
-  if (!header) throw new Error('Not a PEM file (missing -----BEGIN----- header)');
+  if (!header)
+    throw new Error('Not a PEM file (missing -----BEGIN----- header)');
 
   let forgeKey: forge.pki.rsa.PrivateKey;
 
@@ -40,14 +44,16 @@ export function parsePrivateKeyPem(pem: string, passphrase?: string): ParsedKey 
     const asn1 = forge.asn1.fromDer(forge.pki.pemToDer(pem));
     forgeKey = forge.pki.privateKeyFromAsn1(unwrapPkcs8ToRsaAsn1(asn1));
   } else if (header === 'ENCRYPTED PRIVATE KEY') {
-    if (!passphrase) throw new Error('This key is encrypted and needs its passphrase');
+    if (!passphrase)
+      throw new Error('This key is encrypted and needs its passphrase');
     const asn1 = forge.asn1.fromDer(forge.pki.pemToDer(pem));
     const decrypted = forge.pki.decryptPrivateKeyInfo(asn1, passphrase);
-    if (!decrypted) throw new Error('Wrong passphrase, or the key is corrupted');
+    if (!decrypted)
+      throw new Error('Wrong passphrase, or the key is corrupted');
     forgeKey = forge.pki.privateKeyFromAsn1(unwrapPkcs8ToRsaAsn1(decrypted));
   } else if (header === 'EC PRIVATE KEY') {
     throw new Error(
-      'EC private keys are not supported by the current transport on this platform — re-issue this certificate with an RSA key.'
+      'EC private keys are not supported by the current transport on this platform — re-issue this certificate with an RSA key.',
     );
   } else {
     throw new Error(`Unrecognized private key format: ${header}`);
@@ -73,7 +79,9 @@ export function toPkcs8Pem(forgeKey: forge.pki.rsa.PrivateKey): string {
  * one place that difference is bridged — call it right before handing a key to the
  * transport, never store its output as the canonical form.
  */
-export function emitKeyPemForPlatform(forgeKey: forge.pki.rsa.PrivateKey): string {
+export function emitKeyPemForPlatform(
+  forgeKey: forge.pki.rsa.PrivateKey,
+): string {
   return Platform.OS === 'ios' ? toPkcs1Pem(forgeKey) : toPkcs8Pem(forgeKey);
 }
 

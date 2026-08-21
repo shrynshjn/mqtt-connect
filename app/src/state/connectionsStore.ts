@@ -13,9 +13,14 @@ interface ConnectionsState {
   unwatch: (profileId: ProfileId) => void;
   connect: (profileId: ProfileId) => void;
   disconnect: (profileId: ProfileId) => void;
-  subscribeTopic: (profileId: ProfileId, filter: string, qos: QoS) => { ok: boolean; error?: string };
+  subscribeTopic: (
+    profileId: ProfileId,
+    filter: string,
+    qos: QoS,
+  ) => { ok: boolean; error?: string };
   unsubscribeTopic: (profileId: ProfileId, filter: string) => void;
   publish: (req: PublishRequest) => { ok: boolean; error?: string };
+  clearMessages: (profileId: ProfileId) => void;
 }
 
 const unsubscribers = new Map<ProfileId, () => void>();
@@ -26,10 +31,17 @@ export const useConnectionsStore = create<ConnectionsState>(set => ({
   watch: profileId => {
     if (unsubscribers.has(profileId)) return;
     const unsub = manager.onSnapshotChange(profileId, snapshot => {
-      set(state => ({ snapshots: { ...state.snapshots, [profileId]: snapshot } }));
+      set(state => ({
+        snapshots: { ...state.snapshots, [profileId]: snapshot },
+      }));
     });
     unsubscribers.set(profileId, unsub);
-    set(state => ({ snapshots: { ...state.snapshots, [profileId]: manager.getSnapshot(profileId)! } }));
+    set(state => ({
+      snapshots: {
+        ...state.snapshots,
+        [profileId]: manager.getSnapshot(profileId)!,
+      },
+    }));
   },
 
   unwatch: profileId => {
@@ -39,9 +51,12 @@ export const useConnectionsStore = create<ConnectionsState>(set => ({
 
   connect: profileId => manager.connect(profileId),
   disconnect: profileId => manager.disconnect(profileId),
-  subscribeTopic: (profileId, filter, qos) => manager.subscribe(profileId, filter, qos),
-  unsubscribeTopic: (profileId, filter) => manager.unsubscribe(profileId, filter),
+  subscribeTopic: (profileId, filter, qos) =>
+    manager.subscribe(profileId, filter, qos),
+  unsubscribeTopic: (profileId, filter) =>
+    manager.unsubscribe(profileId, filter),
   publish: req => manager.publish(req),
+  clearMessages: profileId => manager.clearMessages(profileId),
 }));
 
 export function selectSnapshot(profileId: ProfileId) {

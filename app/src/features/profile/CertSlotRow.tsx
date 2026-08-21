@@ -22,26 +22,37 @@ export function CertSlotRow({
   onPick: () => void;
   onClear: () => void;
 }) {
-  const expiry = value?.meta?.notAfter ? daysUntilExpiry(value.meta.notAfter) : undefined;
+  const expiry = value?.meta?.notAfter
+    ? daysUntilExpiry(value.meta.notAfter)
+    : undefined;
   const expiringSoon = expiry != null && expiry < 30;
 
   return (
     <View style={[styles.row, expiringSoon && styles.rowWarn]}>
       <View style={styles.body}>
         <Text style={styles.label}>{label}</Text>
-        <Text style={[styles.file, !value && styles.filePlaceholder]} numberOfLines={1}>
+        <Text
+          style={[styles.file, !value && styles.filePlaceholder]}
+          numberOfLines={1}
+        >
           {value ? value.fileName : `${hint} — not selected`}
         </Text>
         {value?.meta && (
           <Text style={[styles.meta, expiringSoon && styles.metaWarn]}>
             {value.meta.subjectCn ? `CN=${value.meta.subjectCn} · ` : ''}
-            {expiry != null ? (expiry < 0 ? 'EXPIRED' : `expires in ${expiry}d`) : ''}
+            {expiry != null
+              ? expiry < 0
+                ? 'EXPIRED'
+                : `expires in ${expiry}d`
+              : ''}
           </Text>
         )}
         {value && !value.meta && <Text style={styles.meta}>imported</Text>}
       </View>
       <Pressable onPress={onPick} style={styles.actionBtn}>
-        <Text style={styles.actionText}>{value ? 'Replace' : 'Choose file'}</Text>
+        <Text style={styles.actionText}>
+          {value ? 'Replace' : 'Choose file'}
+        </Text>
       </Pressable>
       {value && (
         <Pressable onPress={onClear} hitSlop={8} style={styles.clearBtn}>
@@ -53,7 +64,16 @@ export function CertSlotRow({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surfaceRaised, borderColor: colors.hairline, borderWidth: 1, borderRadius: radius.md, padding: 10 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: 10,
+  },
   rowWarn: { borderColor: colors.faultBorder },
   body: { flex: 1, gap: 3 },
   label: { fontSize: 12, fontWeight: '600', color: colors.text },
@@ -61,7 +81,13 @@ const styles = StyleSheet.create({
   filePlaceholder: { color: colors.textTertiary },
   meta: { fontFamily: font.mono, fontSize: 10, color: colors.textTertiary },
   metaWarn: { color: colors.fault },
-  actionBtn: { borderColor: colors.hairlineHi, borderWidth: 1, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 },
+  actionBtn: {
+    borderColor: colors.hairlineHi,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
   actionText: { fontSize: 12, fontWeight: '600', color: colors.accent },
   clearBtn: { padding: 4 },
   clearText: { color: colors.textTertiary, fontSize: 12 },

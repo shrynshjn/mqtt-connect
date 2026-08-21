@@ -1,15 +1,31 @@
 import { Buffer } from 'buffer';
-import mqttDefault, { type IConnackPacket, type IPublishPacket, type MqttClient as MqttClientType } from 'mqtt';
+import mqttDefault, {
+  type IConnackPacket,
+  type IPublishPacket,
+  type MqttClient as MqttClientType,
+} from 'mqtt';
 import type { ConnectionProfile, QoS } from '../types/profile';
-import { emptySnapshot, type ConnectionSnapshot, type SubscriptionRecord } from '../types/connection';
+import {
+  emptySnapshot,
+  type ConnectionSnapshot,
+  type SubscriptionRecord,
+} from '../types/connection';
 import type { MqttMessage, PublishRequest } from '../types/message';
 import { buildConnectionInputs } from './mqttOptions';
 import { makeStreamBuilder } from './transport/streamBuilder';
 import { normalizeError } from './errors';
-import { matchingFilters, isValidPublishTopic, isValidSubscriptionFilter } from './topicMatch';
+import {
+  matchingFilters,
+  isValidPublishTopic,
+  isValidSubscriptionFilter,
+} from './topicMatch';
 import { recordTopicUsage } from '../topics/topicSuggestions';
-import { getActiveSubscriptions, moveToActive, moveToSaved } from '../storage/subscriptionRepo';
-import { loadMessages, saveMessages } from '../storage/messageRepo';
+import {
+  getActiveSubscriptions,
+  moveToActive,
+  moveToSaved,
+} from '../storage/subscriptionRepo';
+import { loadMessages, saveMessages, clearMessages as clearPersistedMessages } from '../storage/messageRepo';
 import { getPrefs } from '../storage/prefsRepo';
 
 // mqtt's React Native build (dist/mqtt.esm.js, selected via the package's "react-native"
@@ -20,7 +36,9 @@ import { getPrefs } from '../storage/prefsRepo';
 // file and silently resolves to `undefined` — which is exactly what produced the
 // "undefined cannot be used as a constructor" crash on the first real device test.
 // Reading the property off the default import at runtime is what actually works.
-const MqttClient = (mqttDefault as unknown as { MqttClient: typeof MqttClientType }).MqttClient;
+const MqttClient = (
+  mqttDefault as unknown as { MqttClient: typeof MqttClientType }
+).MqttClient;
 
 const FLUSH_DELAY_MS = 1000;
 let idCounter = 0;
@@ -59,6 +77,15 @@ export class ManagedConnection {
     return this.messages;
   }
 
+  // Clears both the in-memory feed and the persisted log immediately — nothing is kept
+  // for "undo", matching the ask for an instant clear rather than a soft/reversible one.
+  clearMessages(): void {
+    this.messages = [];
+    this.messagesListeners.forEach(l => l(this.messages));
+    clearPersistedMessages(this.profile.id);
+    this.setSnapshot({ counters: { ...this.snapshot.counters, rx: 0, tx: 0, bytesRx: 0, bytesTx: 0, droppedFromLog: 0 } });
+  }
+
   onSnapshotChange(cb: SnapshotListener): () => void {
     this.snapshotListeners.add(cb);
     return () => this.snapshotListeners.delete(cb);
@@ -76,13 +103,21 @@ export class ManagedConnection {
 
   connect(): void {
     if (this.client) return;
-    this.setSnapshot({ status: 'connecting', statusSince: Date.now(), lastError: undefined });
+    this.setSnapshot({
+      status: 'connecting',
+      statusSince: Date.now(),
+      lastError: undefined,
+    });
 
     let inputs: ReturnType<typeof buildConnectionInputs>;
     try {
       inputs = buildConnectionInputs(this.profile);
     } catch (err) {
-      this.setSnapshot({ status: 'error', statusSince: Date.now(), lastError: normalizeError(err) });
+      this.setSnapshot({
+        status: 'error',
+        statusSince: Date.now(),
+        lastError: normalizeError(err),
+      });
       return;
     }
 
@@ -98,9 +133,18 @@ export class ManagedConnection {
     // just a dev-mode warning.
     let client: MqttClientType;
     try {
-      client = new MqttClient(makeStreamBuilder(inputs.tcp) as unknown as ConstructorParameters<typeof MqttClient>[0], inputs.client);
+      client = new MqttClient(
+        makeStreamBuilder(inputs.tcp) as unknown as ConstructorParameters<
+          typeof MqttClient
+        >[0],
+        inputs.client,
+      );
     } catch (err) {
-      this.setSnapshot({ status: 'error', statusSince: Date.now(), lastError: normalizeError(err) });
+      this.setSnapshot({
+        status: 'error',
+        statusSince: Date.now(),
+        lastError: normalizeError(err),
+      });
       return;
     }
     this.client = client;
@@ -112,28 +156,54 @@ export class ManagedConnection {
         connectedSince: Date.now(),
         reconnectAttempt: 0,
         lastError: undefined,
-        broker: { sessionPresent: !!connack.sessionPresent, assignedClientId: this.profile.clientId },
+        broker: {
+          sessionPresent: !!connack.sessionPresent,
+          assignedClientId: this.profile.clientId,
+        },
       });
       this.resubscribeAll();
     });
 
     client.on('reconnect', () => {
-      this.setSnapshot({ status: 'reconnecting', statusSince: Date.now(), reconnectAttempt: this.snapshot.reconnectAttempt + 1 });
+      this.setSnapshot({
+        status: 'reconnecting',
+        statusSince: Date.now(),
+        reconnectAttempt: this.snapshot.reconnectAttempt + 1,
+      });
     });
 
     client.on('close', () => {
-      if (this.snapshot.status === 'error' || this.snapshot.status === 'disconnecting') return;
+      if (this.snapshot.status === 'disconnecting') return;
+      if (this.snapshot.status === 'error') {
+        // mqtt.js's own reconnect loop is done retrying (or was never started) by the
+        // time 'close' fires after an error — clear the client so a later tap of
+        // Connect/Retry doesn't hit the `if (this.client) return` guard and silently
+        // no-op forever.
+        this.client = null;
+        return;
+      }
       const next = this.profile.reconnectPeriodMs > 0 ? 'reconnecting' : 'idle';
       this.setSnapshot({ status: next, statusSince: Date.now() });
     });
 
     client.on('error', err => {
-      this.setSnapshot({ status: 'error', statusSince: Date.now(), lastError: normalizeError(err) });
+      this.setSnapshot({
+        status: 'error',
+        statusSince: Date.now(),
+        lastError: normalizeError(err),
+      });
+      // Same reasoning as above: without this, a failed connect leaves `this.client`
+      // set forever, and every future Connect/Retry tap becomes a no-op.
+      this.client?.end(true);
+      this.client = null;
     });
 
-    client.on('message', (topic: string, payload: Buffer, packet: IPublishPacket) => {
-      this.handleIncoming(topic, payload, packet);
-    });
+    client.on(
+      'message',
+      (topic: string, payload: Buffer, packet: IPublishPacket) => {
+        this.handleIncoming(topic, payload, packet);
+      },
+    );
   }
 
   disconnect(): void {
@@ -151,15 +221,25 @@ export class ManagedConnection {
   }
 
   private resubscribeAll(): void {
-    getActiveSubscriptions(this.profile.id).forEach(s => this.subscribe(s.topic, s.qos, { persist: false }));
+    getActiveSubscriptions(this.profile.id).forEach(s =>
+      this.subscribe(s.topic, s.qos, { persist: false }),
+    );
   }
 
   // Neither subscribe() nor publish() throw — both are called directly from UI taps,
   // and an uncaught throw there is a hard crash in a release build (no red-screen net).
   // Failures come back as a result object instead, for the caller to show as a toast.
-  subscribe(filter: string, qos: QoS, opts: { persist?: boolean } = {}): { ok: boolean; error?: string } {
+  subscribe(
+    filter: string,
+    qos: QoS,
+    opts: { persist?: boolean } = {},
+  ): { ok: boolean; error?: string } {
     if (!this.client) return { ok: false, error: 'not connected' };
-    if (!isValidSubscriptionFilter(filter)) return { ok: false, error: `"${filter}" is not a valid subscription filter` };
+    if (!isValidSubscriptionFilter(filter))
+      return {
+        ok: false,
+        error: `"${filter}" is not a valid subscription filter`,
+      };
 
     try {
       this.client.subscribe(filter, { qos }, (err, granted) => {
@@ -169,9 +249,16 @@ export class ManagedConnection {
           requestedQos: qos,
           grantedQos: err ? 'failure' : (granted?.[0]?.qos as QoS | undefined),
           createdAt: Date.now(),
-          messageCount: this.snapshot.subscriptions.find(s => s.filter === filter)?.messageCount ?? 0,
+          messageCount:
+            this.snapshot.subscriptions.find(s => s.filter === filter)
+              ?.messageCount ?? 0,
         };
-        this.setSnapshot({ subscriptions: [...this.snapshot.subscriptions.filter(s => s.filter !== filter), record] });
+        this.setSnapshot({
+          subscriptions: [
+            ...this.snapshot.subscriptions.filter(s => s.filter !== filter),
+            record,
+          ],
+        });
       });
     } catch (err) {
       return { ok: false, error: normalizeError(err).message };
@@ -190,19 +277,35 @@ export class ManagedConnection {
     } catch {
       // best-effort — local subscription state below is what the UI actually reflects
     }
-    this.setSnapshot({ subscriptions: this.snapshot.subscriptions.filter(s => s.filter !== filter) });
+    this.setSnapshot({
+      subscriptions: this.snapshot.subscriptions.filter(
+        s => s.filter !== filter,
+      ),
+    });
     moveToSaved(this.profile.id, filter);
   }
 
-  publish(req: Omit<PublishRequest, 'profileId'>): { ok: boolean; error?: string } {
+  publish(req: Omit<PublishRequest, 'profileId'>): {
+    ok: boolean;
+    error?: string;
+  } {
     if (!this.client) return { ok: false, error: 'not connected' };
-    if (!isValidPublishTopic(req.topic)) return { ok: false, error: `"${req.topic}" is not a valid publish topic (wildcards aren't allowed)` };
+    if (!isValidPublishTopic(req.topic))
+      return {
+        ok: false,
+        error: `"${req.topic}" is not a valid publish topic (wildcards aren't allowed)`,
+      };
 
     const payloadBuf = Buffer.from(req.payload, 'utf8');
     try {
-      this.client.publish(req.topic, payloadBuf, { qos: req.qos, retain: req.retain }, err => {
-        if (err) this.setSnapshot({ lastError: normalizeError(err) });
-      });
+      this.client.publish(
+        req.topic,
+        payloadBuf,
+        { qos: req.qos, retain: req.retain },
+        err => {
+          if (err) this.setSnapshot({ lastError: normalizeError(err) });
+        },
+      );
     } catch (err) {
       return { ok: false, error: normalizeError(err).message };
     }
@@ -219,15 +322,24 @@ export class ManagedConnection {
     return { ok: true };
   }
 
-  private handleIncoming(topic: string, payload: Buffer, packet: IPublishPacket): void {
+  private handleIncoming(
+    topic: string,
+    payload: Buffer,
+    packet: IPublishPacket,
+  ): void {
     recordTopicUsage(this.profile.id, topic, 'observed');
 
-    const matched = matchingFilters(topic, this.snapshot.subscriptions.map(s => s.filter));
+    const matched = matchingFilters(
+      topic,
+      this.snapshot.subscriptions.map(s => s.filter),
+    );
     if (matched.length > 0) {
       const now = Date.now();
       this.setSnapshot({
         subscriptions: this.snapshot.subscriptions.map(s =>
-          matched.includes(s.filter) ? { ...s, messageCount: s.messageCount + 1, lastMessageAt: now } : s
+          matched.includes(s.filter)
+            ? { ...s, messageCount: s.messageCount + 1, lastMessageAt: now }
+            : s,
         ),
       });
     }
@@ -256,7 +368,9 @@ export class ManagedConnection {
     });
   }
 
-  private appendMessage(partial: Omit<MqttMessage, 'id' | 'profileId' | 'receivedAt' | 'size'>): void {
+  private appendMessage(
+    partial: Omit<MqttMessage, 'id' | 'profileId' | 'receivedAt' | 'size'>,
+  ): void {
     const message: MqttMessage = {
       id: nextMessageId(this.profile.id),
       profileId: this.profile.id,
@@ -264,7 +378,12 @@ export class ManagedConnection {
       size: partial.payload.length,
       ...partial,
     };
-    this.messages.push(message);
+    // A new array reference, not push() — the listener feeds straight into React's
+    // useState setter (see useMessages.ts), and React bails out of re-rendering when
+    // the "new" state is the exact same object reference as before (mutating in place
+    // and re-passing it is indistinguishable from passing back the old value). That was
+    // the actual cause of "count increases but the list doesn't update".
+    this.messages = [...this.messages, message];
     this.messagesListeners.forEach(l => l(this.messages));
     this.scheduleFlush();
   }
@@ -275,10 +394,20 @@ export class ManagedConnection {
     if (this.flushTimer) return;
     this.flushTimer = setTimeout(() => {
       this.flushTimer = null;
-      const { dropped } = saveMessages(this.profile.id, this.messages, getPrefs().messageBufferPerConnection);
+      const { dropped } = saveMessages(
+        this.profile.id,
+        this.messages,
+        getPrefs().messageBufferPerConnection,
+      );
       if (dropped > 0) {
         this.messages = this.messages.slice(dropped);
-        this.setSnapshot({ counters: { ...this.snapshot.counters, droppedFromLog: this.snapshot.counters.droppedFromLog + dropped } });
+        this.messagesListeners.forEach(l => l(this.messages));
+        this.setSnapshot({
+          counters: {
+            ...this.snapshot.counters,
+            droppedFromLog: this.snapshot.counters.droppedFromLog + dropped,
+          },
+        });
       }
     }, FLUSH_DELAY_MS);
   }

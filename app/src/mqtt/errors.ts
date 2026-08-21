@@ -12,11 +12,28 @@ const CONNACK_REASONS: Record<number, string> = {
 function categorize(raw: string): ErrorCategory {
   const s = raw.toLowerCase();
   if (s.includes('enotfound') || s.includes('dns')) return 'dns';
-  if (s.includes('econnrefused') || s.includes('etimedout') || s.includes('network')) return 'tcp';
-  if (s.includes('certificate') && (s.includes('client') || s.includes('key'))) return 'tls-client-cert';
-  if (s.includes('trust') || s.includes('unable to verify') || s.includes('certificate')) return 'tls-trust';
-  if (s.includes('handshake') || s.includes('ssl') || s.includes('tls')) return 'tls-handshake';
-  if (s.includes('connack') || s.includes('not authorized') || s.includes('bad username')) return 'mqtt-connack';
+  if (
+    s.includes('econnrefused') ||
+    s.includes('etimedout') ||
+    s.includes('network')
+  )
+    return 'tcp';
+  if (s.includes('certificate') && (s.includes('client') || s.includes('key')))
+    return 'tls-client-cert';
+  if (
+    s.includes('trust') ||
+    s.includes('unable to verify') ||
+    s.includes('certificate')
+  )
+    return 'tls-trust';
+  if (s.includes('handshake') || s.includes('ssl') || s.includes('tls'))
+    return 'tls-handshake';
+  if (
+    s.includes('connack') ||
+    s.includes('not authorized') ||
+    s.includes('bad username')
+  )
+    return 'mqtt-connack';
   if (s.includes('timeout')) return 'timeout';
   return 'unknown';
 }
@@ -42,14 +59,19 @@ function hintFor(category: ErrorCategory): string | undefined {
   }
 }
 
-export function normalizeError(raw: unknown, connackReturnCode?: number): NormalizedError {
+export function normalizeError(
+  raw: unknown,
+  connackReturnCode?: number,
+): NormalizedError {
   const rawMessage = raw instanceof Error ? raw.message : String(raw);
   let category = categorize(rawMessage);
   let message = rawMessage;
 
   if (connackReturnCode != null && connackReturnCode !== 0) {
     category = 'mqtt-connack';
-    message = CONNACK_REASONS[connackReturnCode] ?? `CONNACK rejected (code ${connackReturnCode})`;
+    message =
+      CONNACK_REASONS[connackReturnCode] ??
+      `CONNACK rejected (code ${connackReturnCode})`;
   }
 
   return {

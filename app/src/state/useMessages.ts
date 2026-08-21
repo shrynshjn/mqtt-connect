@@ -10,7 +10,9 @@ import type { MqttMessage } from '../types/message';
  * showing a feed (Feed tab, Traffic) pay for this.
  */
 export function useMessages(profileId: ProfileId): MqttMessage[] {
-  const [messages, setMessages] = useState<MqttMessage[]>(() => manager.getMessages(profileId));
+  const [messages, setMessages] = useState<MqttMessage[]>(() =>
+    manager.getMessages(profileId),
+  );
 
   useEffect(() => {
     setMessages(manager.getMessages(profileId));

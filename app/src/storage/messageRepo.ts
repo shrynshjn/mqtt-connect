@@ -30,7 +30,10 @@ function toStored(m: MqttMessage): StoredMessage {
 
 function fromStored(s: StoredMessage): MqttMessage {
   const { payloadBase64, ...rest } = s;
-  return { ...rest, payload: new Uint8Array(Buffer.from(payloadBase64, 'base64')) };
+  return {
+    ...rest,
+    payload: new Uint8Array(Buffer.from(payloadBase64, 'base64')),
+  };
 }
 
 export function loadMessages(profileId: ProfileId): MqttMessage[] {
@@ -42,7 +45,11 @@ export function loadMessages(profileId: ProfileId): MqttMessage[] {
 // Persists the full current message list for a connection, evicting the oldest entries
 // beyond `cap` (the profile's configurable messageLogCap). Returns how many were dropped
 // so the caller can surface it in the UI rather than losing data silently.
-export function saveMessages(profileId: ProfileId, messages: MqttMessage[], cap: number): { dropped: number } {
+export function saveMessages(
+  profileId: ProfileId,
+  messages: MqttMessage[],
+  cap: number,
+): { dropped: number } {
   const dropped = Math.max(0, messages.length - cap);
   const kept = dropped > 0 ? messages.slice(messages.length - cap) : messages;
   getSecureKv().set(key(profileId), JSON.stringify(kept.map(toStored)));

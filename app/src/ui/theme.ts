@@ -32,10 +32,31 @@ export const radius = { sm: 6, md: 10, lg: 13, xl: 16, pill: 20 } as const;
 export function statusColors(status: 'live' | 'fault' | 'idle') {
   switch (status) {
     case 'live':
-      return { dot: colors.accent, fill: colors.accent, glow: colors.accentGlow, chipBg: colors.accentDim, label: 'live', actionColor: colors.textSecondary };
+      return {
+        dot: colors.accent,
+        fill: colors.accent,
+        glow: colors.accentGlow,
+        chipBg: colors.accentDim,
+        label: 'live',
+        actionColor: colors.textSecondary,
+      };
     case 'fault':
-      return { dot: colors.fault, fill: 'transparent', glow: colors.faultDim, chipBg: colors.faultDim, label: 'fault', actionColor: colors.fault };
+      return {
+        dot: colors.fault,
+        fill: 'transparent',
+        glow: colors.faultDim,
+        chipBg: colors.faultDim,
+        label: 'fault',
+        actionColor: colors.fault,
+      };
     default:
-      return { dot: colors.textTertiary, fill: 'transparent', glow: 'transparent', chipBg: colors.surfaceRaised, label: 'idle', actionColor: colors.accent };
+      return {
+        dot: colors.textTertiary,
+        fill: 'transparent',
+        glow: 'transparent',
+        chipBg: colors.surfaceRaised,
+        label: 'idle',
+        actionColor: colors.accent,
+      };
   }
 }

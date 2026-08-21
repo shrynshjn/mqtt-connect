@@ -2,9 +2,18 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { colors } from './theme';
 
-export function ToggleSwitch({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+export function ToggleSwitch({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
-    <Pressable onPress={() => onChange(!value)} style={[styles.track, value && styles.trackOn]}>
+    <Pressable
+      onPress={() => onChange(!value)}
+      style={[styles.track, value && styles.trackOn]}
+    >
       <View style={[styles.thumb, value && styles.thumbOn]} />
     </Pressable>
   );

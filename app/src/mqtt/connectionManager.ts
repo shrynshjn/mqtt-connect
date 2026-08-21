@@ -21,19 +21,35 @@ function getOrCreate(profileId: ProfileId): ManagedConnection {
   return conn;
 }
 
+// getOrCreate() reads the profile from storage and constructs a ManagedConnection the
+// first time a given profile is touched — if that throws (missing profile, corrupted
+// data), it must not do so uncaught: called straight from a button's onPress, an
+// uncaught throw here means the tap silently does nothing instead of surfacing a fault.
 export function connect(profileId: ProfileId): void {
-  getOrCreate(profileId).connect();
+  try {
+    getOrCreate(profileId).connect();
+  } catch (err) {
+    console.warn(`connect(${profileId}) failed before a connection could even be attempted:`, err);
+  }
 }
 
 export function disconnect(profileId: ProfileId): void {
-  connections.get(profileId)?.disconnect();
+  try {
+    connections.get(profileId)?.disconnect();
+  } catch (err) {
+    console.warn(`disconnect(${profileId}) failed:`, err);
+  }
 }
 
 export function isConnected(profileId: ProfileId): boolean {
   return connections.get(profileId)?.getSnapshot().status === 'connected';
 }
 
-export function subscribe(profileId: ProfileId, filter: string, qos: QoS): { ok: boolean; error?: string } {
+export function subscribe(
+  profileId: ProfileId,
+  filter: string,
+  qos: QoS,
+): { ok: boolean; error?: string } {
   return getOrCreate(profileId).subscribe(filter, qos);
 }
 
@@ -45,23 +61,37 @@ export function publish(req: PublishRequest): { ok: boolean; error?: string } {
   return getOrCreate(req.profileId).publish(req);
 }
 
-export function getSnapshot(profileId: ProfileId): ConnectionSnapshot | undefined {
+export function getSnapshot(
+  profileId: ProfileId,
+): ConnectionSnapshot | undefined {
   return connections.get(profileId)?.getSnapshot();
 }
 
 export function getAllSnapshots(): ConnectionSnapshot[] {
-  return listProfiles().map(p => connections.get(p.id)?.getSnapshot()).filter((s): s is ConnectionSnapshot => !!s);
+  return listProfiles()
+    .map(p => connections.get(p.id)?.getSnapshot())
+    .filter((s): s is ConnectionSnapshot => !!s);
 }
 
 export function getMessages(profileId: ProfileId): MqttMessage[] {
   return connections.get(profileId)?.getMessages() ?? [];
 }
 
-export function onSnapshotChange(profileId: ProfileId, cb: (s: ConnectionSnapshot) => void): () => void {
+export function clearMessages(profileId: ProfileId): void {
+  connections.get(profileId)?.clearMessages();
+}
+
+export function onSnapshotChange(
+  profileId: ProfileId,
+  cb: (s: ConnectionSnapshot) => void,
+): () => void {
   return getOrCreate(profileId).onSnapshotChange(cb);
 }
 
-export function onMessages(profileId: ProfileId, cb: (m: MqttMessage[]) => void): () => void {
+export function onMessages(
+  profileId: ProfileId,
+  cb: (m: MqttMessage[]) => void,
+): () => void {
   return getOrCreate(profileId).onMessages(cb);
 }
 
@@ -78,5 +108,7 @@ export function destroyConnection(profileId: ProfileId): void {
 
 // On cold start, connect every profile that opted into autoConnectOnLaunch.
 export function connectAutoLaunchProfiles(): void {
-  listProfiles().filter(p => p.autoConnectOnLaunch).forEach(p => connect(p.id));
+  listProfiles()
+    .filter(p => p.autoConnectOnLaunch)
+    .forEach(p => connect(p.id));
 }

@@ -1,7 +1,11 @@
 import type { IClientOptions } from 'mqtt';
 import { getSecret } from '../storage/secretRepo';
-import { parsePrivateKeyPem, emitKeyPemForPlatform } from '../crypto/keyNormalize';
-import type { ConnectionProfile } from '../types/profile';
+import { getBroker } from '../storage/brokerRepo';
+import {
+  parsePrivateKeyPem,
+  emitKeyPemForPlatform,
+} from '../crypto/keyNormalize';
+import { isTlsTransport, type ConnectionProfile } from '../types/profile';
 import type { TcpConnectOptions } from './transport/types';
 
 export interface ConnectionInputs {
@@ -16,16 +20,34 @@ export interface ConnectionInputs {
  * on every connect attempt rather than cached, so a cert/password change takes effect
  * on the next reconnect without any extra invalidation logic.
  */
-export function buildConnectionInputs(profile: ConnectionProfile): ConnectionInputs {
+export function buildConnectionInputs(
+  profile: ConnectionProfile,
+): ConnectionInputs {
+  const broker = getBroker(profile.brokerId);
+  if (!broker) {
+    throw new Error(
+      "This client's broker could not be found — it may have been deleted. Edit this client and pick a broker again.",
+    );
+  }
+
   const tcp: TcpConnectOptions = {
-    host: profile.host,
-    port: profile.port,
+    host: broker.host,
+    port: broker.port,
     connectTimeoutMs: profile.connectTimeoutMs,
   };
 
+  if (isTlsTransport(broker.transport) && !profile.tls) {
+    throw new Error(
+      `"${broker.name}" requires TLS but this client has no CA certificate configured — edit the client to add one.`,
+    );
+  }
+
   if (profile.tls) {
     const ca = getSecret(profile.tls.caRef);
-    if (!ca) throw new Error('CA certificate is missing from secure storage for this profile.');
+    if (!ca)
+      throw new Error(
+        'CA certificate is missing from secure storage for this profile.',
+      );
 
     let cert: string | undefined;
     let key: string | undefined;
@@ -35,9 +57,14 @@ export function buildConnectionInputs(profile: ConnectionProfile): ConnectionInp
     if (profile.tls.identity) {
       const certPem = getSecret(profile.tls.identity.certRef);
       const keyPem = getSecret(profile.tls.identity.keyRef);
-      if (!certPem || !keyPem) throw new Error('Client certificate or key is missing from secure storage for this profile.');
+      if (!certPem || !keyPem)
+        throw new Error(
+          'Client certificate or key is missing from secure storage for this profile.',
+        );
 
-      const passphrase = profile.tls.keyPassphraseRef ? getSecret(profile.tls.keyPassphraseRef) : undefined;
+      const passphrase = profile.tls.keyPassphraseRef
+        ? getSecret(profile.tls.keyPassphraseRef)
+        : undefined;
       const parsed = parsePrivateKeyPem(keyPem, passphrase);
 
       cert = certPem;
@@ -59,7 +86,9 @@ export function buildConnectionInputs(profile: ConnectionProfile): ConnectionInp
     // A bad password should surface as an auth error, not an infinite reconnect loop.
     reconnectOnConnackError: false,
     username: profile.auth?.username,
-    password: profile.auth?.passwordRef ? getSecret(profile.auth.passwordRef) : undefined,
+    password: profile.auth?.passwordRef
+      ? getSecret(profile.auth.passwordRef)
+      : undefined,
     will: profile.lastWill
       ? {
           topic: profile.lastWill.topic,

@@ -18,7 +18,9 @@ const KEY = 'prefs';
 
 export function getPrefs(): AppPrefs {
   const raw = getMetaKv().getString(KEY);
-  return raw ? { ...DEFAULT_PREFS, ...(JSON.parse(raw) as Partial<AppPrefs>) } : DEFAULT_PREFS;
+  return raw
+    ? { ...DEFAULT_PREFS, ...(JSON.parse(raw) as Partial<AppPrefs>) }
+    : DEFAULT_PREFS;
 }
 
 export function setPrefs(patch: Partial<AppPrefs>): AppPrefs {

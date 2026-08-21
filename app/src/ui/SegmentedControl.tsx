@@ -21,7 +21,9 @@ export function SegmentedControl<T extends string | number>({
             onPress={() => onChange(opt.value)}
             style={[styles.segment, active && styles.segmentActive]}
           >
-            <Text style={[styles.label, active && styles.labelActive]}>{opt.label}</Text>
+            <Text style={[styles.label, active && styles.labelActive]}>
+              {opt.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -32,6 +34,7 @@ export function SegmentedControl<T extends string | number>({
 const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
+    alignSelf: 'flex-start',
     backgroundColor: colors.bg,
     borderColor: colors.hairline,
     borderWidth: 1,
@@ -40,9 +43,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   segment: {
-    flex: 1,
     paddingVertical: 6,
-    paddingHorizontal: space.sm,
+    paddingHorizontal: space.md,
     borderRadius: radius.sm - 2,
     alignItems: 'center',
   },

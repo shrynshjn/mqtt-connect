@@ -14,7 +14,10 @@ export interface UnwrappedBundle {
  * one downstream path. `base64Contents` is the file read as base64 by the document
  * picker (binary file — never treat as text).
  */
-export function unwrapPkcs12(base64Contents: string, password: string): UnwrappedBundle {
+export function unwrapPkcs12(
+  base64Contents: string,
+  password: string,
+): UnwrappedBundle {
   const der = forge.util.decode64(base64Contents);
   const asn1 = forge.asn1.fromDer(der);
 
@@ -35,7 +38,8 @@ export function unwrapPkcs12(base64Contents: string, password: string): Unwrappe
         if (!cert) cert = safeBag.cert;
         else chain.push(safeBag.cert);
       } else if (
-        (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag || safeBag.type === forge.pki.oids.keyBag) &&
+        (safeBag.type === forge.pki.oids.pkcs8ShroudedKeyBag ||
+          safeBag.type === forge.pki.oids.keyBag) &&
         safeBag.key
       ) {
         key = safeBag.key as ParsedKey['forgeKey'];

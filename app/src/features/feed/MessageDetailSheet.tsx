@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { Buffer } from 'buffer';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { colors, font, radius, space } from '../../ui/theme';
 import { SegmentedControl } from '../../ui/SegmentedControl';
 import { formatTimestamp, byteLength } from '../../ui/format';
@@ -56,15 +63,24 @@ export function MessageDetailSheet({
             ))}
           </View>
           <SegmentedControl
-            options={[{ value: 'JSON', label: 'JSON' }, { value: 'Text', label: 'Text' }, { value: 'Base64', label: 'Base64' }]}
+            options={[
+              { value: 'JSON', label: 'JSON' },
+              { value: 'Text', label: 'Text' },
+              { value: 'Base64', label: 'Base64' },
+            ]}
             value={mode}
             onChange={setMode}
           />
           <ScrollView style={styles.payloadBox}>
-            <Text style={styles.payloadText}>{renderBody(message.payload, mode)}</Text>
+            <Text style={styles.payloadText}>
+              {renderBody(message.payload, mode)}
+            </Text>
           </ScrollView>
           <View style={styles.actions}>
-            <Pressable style={styles.primaryBtn} onPress={() => onResend(message)}>
+            <Pressable
+              style={styles.primaryBtn}
+              onPress={() => onResend(message)}
+            >
               <Text style={styles.primaryText}>Re-send</Text>
             </Pressable>
             <Pressable style={styles.ghostBtn} onPress={() => onCopy(message)}>
@@ -78,18 +94,78 @@ export function MessageDetailSheet({
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(4,7,13,0.6)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.surface, borderTopColor: colors.hairlineHi, borderTopWidth: 1, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: space.lg, gap: space.md },
-  handle: { width: 38, height: 4, borderRadius: 2, backgroundColor: colors.hairlineHi, alignSelf: 'center' },
-  label: { fontFamily: font.mono, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: colors.textTertiary },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(4,7,13,0.6)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopColor: colors.hairlineHi,
+    borderTopWidth: 1,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    padding: space.lg,
+    gap: space.md,
+  },
+  handle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.hairlineHi,
+    alignSelf: 'center',
+  },
+  label: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: colors.textTertiary,
+  },
   topic: { fontFamily: font.mono, fontSize: 13, color: colors.text },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  metaChip: { fontFamily: font.mono, fontSize: 10, color: colors.textSecondary, backgroundColor: colors.surfaceRaised, borderColor: colors.hairline, borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5 },
-  payloadBox: { maxHeight: 230, backgroundColor: colors.bg, borderColor: colors.hairline, borderWidth: 1, borderRadius: radius.xl, padding: 13 },
-  payloadText: { fontFamily: font.mono, fontSize: 11.5, lineHeight: 19, color: colors.text },
+  metaChip: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    color: colors.textSecondary,
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  payloadBox: {
+    maxHeight: 230,
+    backgroundColor: colors.bg,
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    borderRadius: radius.xl,
+    padding: 13,
+  },
+  payloadText: {
+    fontFamily: font.mono,
+    fontSize: 11.5,
+    lineHeight: 19,
+    color: colors.text,
+  },
   actions: { flexDirection: 'row', gap: 9 },
-  primaryBtn: { flex: 1, alignItems: 'center', backgroundColor: colors.accent, borderRadius: 11, paddingVertical: 12 },
+  primaryBtn: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: 11,
+    paddingVertical: 12,
+  },
   primaryText: { fontSize: 14, fontWeight: '700', color: colors.bg },
-  ghostBtn: { alignItems: 'center', justifyContent: 'center', borderColor: colors.hairline, borderWidth: 1, borderRadius: 11, paddingVertical: 12, paddingHorizontal: 16 },
+  ghostBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    borderRadius: 11,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
   ghostText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
 });

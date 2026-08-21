@@ -11,7 +11,11 @@ export function initStorage(): Promise<void> {
   if (!initPromise) {
     initPromise = (async () => {
       const key = await getOrCreateMasterKey();
-      secureKv = createMMKV({ id: 'mqttconnect.secure', encryptionKey: key, encryptionType: 'AES-256' });
+      secureKv = createMMKV({
+        id: 'mqttconnect.secure',
+        encryptionKey: key,
+        encryptionType: 'AES-256',
+      });
       metaKv = createMMKV({ id: 'mqttconnect.meta' });
     })();
   }
@@ -19,7 +23,8 @@ export function initStorage(): Promise<void> {
 }
 
 function require<T>(kv: T | null, name: string): T {
-  if (!kv) throw new Error(`storage: ${name} accessed before initStorage() completed`);
+  if (!kv)
+    throw new Error(`storage: ${name} accessed before initStorage() completed`);
   return kv;
 }
 

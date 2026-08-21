@@ -14,7 +14,10 @@ export function buildStream(options: TcpConnectOptions): IStream {
   const { host, port, tls, connectTimeoutMs } = options;
 
   if (!tls) {
-    const socket = TcpSockets.connect({ host, port, connectTimeout: connectTimeoutMs }, noop);
+    const socket = TcpSockets.connect(
+      { host, port, connectTimeout: connectTimeoutMs },
+      noop,
+    );
     return wrapAsIStream(socket);
   }
 
@@ -23,7 +26,9 @@ export function buildStream(options: TcpConnectOptions): IStream {
   // client certificate instead of silently discarding it, and real server-trust
   // validation on both platforms depends on it after the trust-manager patch.
   if (!tls.ca) {
-    throw new Error('TLS connection requested without a CA certificate — this should never happen (CA is mandatory in ProfileForm).');
+    throw new Error(
+      'TLS connection requested without a CA certificate — this should never happen (CA is mandatory in ProfileForm).',
+    );
   }
 
   const socket = TcpSockets.connectTLS({

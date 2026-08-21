@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import { colors, font, radius, space } from './theme';
 
@@ -17,12 +23,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     (msg: string) => {
       if (hideTimer.current) clearTimeout(hideTimer.current);
       setMessage(msg);
-      Animated.timing(opacity, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
       hideTimer.current = setTimeout(() => {
-        Animated.timing(opacity, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => setMessage(null));
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }).start(() => setMessage(null));
       }, 1600);
     },
-    [opacity]
+    [opacity],
   );
 
   return (

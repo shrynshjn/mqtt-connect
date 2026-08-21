@@ -25,6 +25,27 @@ export interface IStream {
 // that already matches 1:1 (on/once/removeListener/write/destroy) is passed straight
 // through, and only `pipe`/`end`/`setMaxListeners` need real shims.
 export function wrapAsIStream(socket: Socket): IStream {
+  // react-native-tcp-socket's own Socket.write() *throws* ("Socket is closed.") if the
+  // socket hasn't finished connecting yet, rather than buffering like Node's net.Socket
+  // does. mqtt.js assumes standard Node semantics: it pipes the stream and immediately
+  // writes the CONNECT packet in the same tick, well before our socket (whose connect is
+  // an async native bridge call) has actually connected — so every real connection attempt
+  // hit that throw. Plain sockets emit 'connect' once ready; TLS sockets (from
+  // connectTLS()) emit 'secureConnect' instead (and never 'connect' on themselves) — buffer
+  // writes until whichever one fires, then flush in order.
+  let ready = false;
+  const pending: { chunk: unknown; args: unknown[] }[] = [];
+
+  function flush() {
+    if (ready) return;
+    ready = true;
+    for (const { chunk, args } of pending.splice(0, pending.length)) {
+      socket.write(chunk as any, ...(args as []));
+    }
+  }
+  socket.once('connect', flush);
+  socket.once('secureConnect', flush);
+
   const iStream = {
     // Minimal manual `pipe`: forward incoming chunks to the destination writable, and
     // end it when the source closes. MQTT.js only ever pipes into its own internal
@@ -40,7 +61,13 @@ export function wrapAsIStream(socket: Socket): IStream {
     removeListener: socket.removeListener.bind(socket),
     emit: socket.emit.bind(socket),
 
-    write: socket.write.bind(socket),
+    write(chunk: unknown, ...args: unknown[]) {
+      if (!ready) {
+        pending.push({ chunk, args });
+        return true;
+      }
+      return socket.write(chunk as any, ...(args as []));
+    },
 
     // react-native-tcp-socket's Socket.end() takes no callback (unlike Node's Writable).
     // MQTT.js expects the callback to fire once the stream has actually finished
