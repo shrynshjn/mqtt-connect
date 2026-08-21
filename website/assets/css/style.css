@@ -162,7 +162,7 @@ section { padding: 84px 0; }
 h2 { font-size: 32px; letter-spacing: -0.01em; margin: 0 0 14px; font-weight: 700; }
 .section-head p { color: var(--text-secondary); font-size: 15.5px; margin: 0; }
 
-.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
 .feature {
   background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-xl);
   padding: 26px; transition: border-color 0.15s;
@@ -196,7 +196,7 @@ h2 { font-size: 32px; letter-spacing: -0.01em; margin: 0 0 14px; font-weight: 70
 .terminal .prompt { color: var(--text-tertiary); }
 
 /* Screens showcase */
-.showcase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.showcase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
 .mini-screen {
   background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-xl);
   padding: 16px; display: flex; flex-direction: column; gap: 10px;
@@ -215,6 +215,12 @@ h2 { font-size: 32px; letter-spacing: -0.01em; margin: 0 0 14px; font-weight: 70
 .seg span.on { background: var(--accent); color: var(--bg); font-weight: 700; }
 .chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { font-family: var(--mono); font-size: 9.5px; background: var(--surface-raised); border: 1px solid var(--hairline); border-radius: 5px; padding: 3px 7px; color: var(--text-secondary); }
+.chip.accent { background: var(--accent-dim); border-color: var(--hairline-hi); color: var(--accent); }
+.kv-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--row-hairline); font-family: var(--mono); font-size: 10.5px; }
+.kv-row:last-of-type { border-bottom: none; }
+.kv-row .k { color: var(--text-tertiary); }
+.kv-row .v { color: var(--text); text-align: right; }
+.kv-row .v.accent { color: var(--accent); }
 .payload-box { font-family: var(--mono); font-size: 10px; background: var(--bg); border: 1px solid var(--hairline); border-radius: 8px; padding: 9px; color: var(--text); white-space: pre; overflow: hidden; }
 
 /* CTA band */

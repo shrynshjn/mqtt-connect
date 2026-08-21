@@ -32,8 +32,9 @@
 <main class="wrap legal-body">
   <div class="callout">
     <p><strong>In short:</strong> MQTT Connect doesn't have a server. There's no account, no analytics, and no cloud
-    sync. Your broker profiles, credentials and certificates are encrypted and stored only on your device. The only
-    network traffic the app generates is the MQTT connection you point it at, to the broker you configure.</p>
+    sync. Your broker profiles, clients, credentials and certificates are encrypted and stored only on your device.
+    The only network traffic the app generates is the MQTT connection a client makes to the broker it's set up to
+    use.</p>
   </div>
 
   <div class="toc">
@@ -61,36 +62,37 @@
   <h2 id="device">2. What's stored on your device</h2>
   <p>To function, MQTT Connect stores the following information locally, on your device only:</p>
   <ul>
-    <li><strong>Broker profiles</strong> — name, host, port, transport (TCP/TLS/WS/WSS), MQTT protocol version, client ID, and connection options you configure.</li>
-    <li><strong>Credentials</strong> — usernames and passwords for broker authentication, encrypted at rest using the operating system's secure storage (the iOS/Android keychain) combined with encrypted local storage.</li>
-    <li><strong>Certificates &amp; keys</strong> — CA certificates, client certificates, and private keys you import for TLS/mTLS connections (see §4).</li>
-    <li><strong>Topics &amp; message history</strong> — subscribed topics, saved topic suggestions, publish snippets, and a rolling buffer of recently sent/received messages, kept only for your own reference within the app.</li>
+    <li><strong>Broker profiles</strong> — a broker's domain/host, port, and transport (TCP/TLS/WS/WSS) that you save once and reuse. Creating a client is just picking a saved broker; its connection details fill in automatically from there.</li>
+    <li><strong>Clients</strong> — the MQTT clients you create, each linked to a broker profile, with its own client ID, MQTT protocol version, and connection options (keep-alive, clean session, timeouts, etc.).</li>
+    <li><strong>Credentials</strong> — usernames and passwords for a client's broker authentication, encrypted at rest using the operating system's secure storage (the iOS/Android keychain) combined with encrypted local storage.</li>
+    <li><strong>Certificates &amp; keys</strong> — CA certificates, client certificates, and private keys you import for a client's TLS/mTLS connection (see §4).</li>
+    <li><strong>Topics &amp; message history</strong> — subscribed topics, saved topic suggestions, publish snippets, and a rolling buffer of recently sent/received messages per client, kept only for your own reference within the app.</li>
     <li><strong>App preferences</strong> — settings like Face ID lock, auto-lock timeout, and message buffer size.</li>
   </ul>
   <p>All of the above lives in encrypted local storage and the platform keychain on your device. None of it is synced
   to a cloud service, backed up to a server we operate, or accessible to us. Uninstalling the app removes it.</p>
 
   <h2 id="network">3. Network &amp; broker traffic</h2>
-  <p>The only network connections MQTT Connect initiates are the ones you configure: a connection to the MQTT broker
-  host and port you enter in a broker profile, using the transport and credentials you supply. Any data you publish
-  or subscribe to is sent directly between your device and that broker — it does not pass through us or any server we
-  control. The security and retention practices of that data are governed by the operator of the broker you connect
-  to, not by this policy.</p>
+  <p>The only network connections MQTT Connect initiates are the ones you configure: each client connects to the
+  host and port defined by the broker profile it's linked to, using the transport and credentials you supply for
+  that client. Any data you publish or subscribe to is sent directly between your device and that broker — it does
+  not pass through us or any server we control. The security and retention practices of that data are governed by the
+  operator of the broker you connect to, not by this policy.</p>
 
   <h2 id="certs">4. Certificates &amp; private keys</h2>
   <p>When you import a CA certificate, client certificate, private key, or a <code>.p12</code> bundle — whether by
   picking a file, pasting PEM text, or unlocking a passphrase-protected key — the file is read once through the
   system file picker and its contents are written directly into the device keychain. The original file is never
-  copied elsewhere by the app, never leaves your device, and is excluded from the profile export feature described
+  copied elsewhere by the app, never leaves your device, and is excluded from the client export feature described
   below.</p>
 
   <h2 id="export">5. Export &amp; deletion</h2>
-  <p>Settings includes an <strong>Export profiles (no secrets)</strong> option, which lets you export your broker
-  configuration (host, port, transport, topic lists, etc.) without passwords, private keys, or certificates — useful
-  for moving profiles between devices without exposing credentials.</p>
-  <p>Settings also includes an <strong>Erase all data</strong> option, which permanently deletes every profile,
-  credential, certificate, and message stored by the app on that device. This action is irreversible and, because we
-  hold no copy of your data, cannot be undone by us either.</p>
+  <p>Settings includes an <strong>Export clients (no secrets)</strong> option, which lets you export your client
+  configuration (the linked broker's host/port/transport, topic lists, etc.) without passwords, private keys, or
+  certificates — useful for moving clients between devices without exposing credentials.</p>
+  <p>Settings also includes an <strong>Erase all data</strong> option, which permanently deletes every broker
+  profile, client, credential, certificate, and message stored by the app on that device. This action is
+  irreversible and, because we hold no copy of your data, cannot be undone by us either.</p>
 
   <h2 id="biometrics">6. Biometrics &amp; device locks</h2>
   <p>You may enable Face ID / biometric authentication to open the app, an auto-lock timer, and an option to hide

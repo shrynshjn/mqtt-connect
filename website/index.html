@@ -1,7 +1,7 @@
 <title>MQTT Connect</title>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="MQTT Connect is a native iOS &amp; Android client for MQTT brokers — multiple broker profiles, mTLS client certificates, a live message feed, and a publish composer. Everything stored encrypted on-device, offline, no telemetry." />
+<meta name="description" content="MQTT Connect is a native iOS &amp; Android app for managing MQTT clients. Save a broker once, spin up clients that inherit its host, port and transport, add mTLS certificates, and watch a live message feed. Everything stored encrypted on-device, offline, no telemetry." />
 <link rel="icon" href="assets/img/icon-1024.png" />
 <link rel="apple-touch-icon" href="assets/img/icon-1024.png" />
 <meta property="og:title" content="MQTT Connect" />
@@ -31,10 +31,11 @@
     <div class="wrap hero-grid">
       <div>
         <span class="eyebrow"><span class="dot"></span> MQTT 3.1.1 &amp; 5.0 · TLS &amp; mTLS</span>
-        <h1>Every broker.<br />One <span>encrypted</span> hub.</h1>
+        <h1>Save the broker.<br />Spin up <span>clients</span> in seconds.</h1>
         <p class="lede">
-          MQTT Connect is a native client for managing broker profiles, subscribing to topics, and publishing
-          messages — with client certificates, a live message feed, and everything stored encrypted on your device.
+          MQTT Connect keeps brokers and clients separate. Save a broker's domain, port and transport once — then
+          create as many MQTT clients as you need, each one just picking that broker and inheriting its connection
+          details, plus its own credentials, certificates and topics.
         </p>
         <div class="cta-row">
           <a class="btn btn-primary" href="#get" id="get">Download the app</a>
@@ -57,7 +58,7 @@
               <div class="screen-title">Connections</div>
               <div class="screen-gear">⚙︎</div>
             </div>
-            <div class="screen-summary">2 live · 7 subscriptions · 3 profiles</div>
+            <div class="screen-summary">2 live · 7 subscriptions · 3 clients</div>
             <div class="screen-list">
               <div class="card">
                 <div class="card-top">
@@ -92,7 +93,7 @@
               <div class="card fault">
                 <div class="card-top">
                   <div class="status-dot fault"></div>
-                  <div class="card-name">Staging Broker</div>
+                  <div class="card-name">Staging</div>
                   <div class="card-chip">fault</div>
                 </div>
                 <div class="card-host">tls://staging.mqtt.io:8883</div>
@@ -104,7 +105,7 @@
                 <div class="fault-banner">connect ECONNREFUSED · check firewall / port 8883</div>
               </div>
 
-              <div class="add-row">Add broker profile</div>
+              <div class="add-row">Add client</div>
               <div class="footer-note">Stored on device · encrypted at rest<br />no cloud sync</div>
             </div>
           </div>
@@ -122,14 +123,19 @@
       </div>
       <div class="feature-grid">
         <div class="feature">
+          <div class="icon">◈</div>
+          <h3>Save a broker once</h3>
+          <p>Store a broker's domain, port and transport as a reusable broker profile — set it up once, then reuse it for every client that connects to it.</p>
+        </div>
+        <div class="feature">
           <div class="icon">◆</div>
-          <h3>Unlimited broker profiles</h3>
-          <p>Keep every environment — production, staging, home lab — one tap away, each with its own transport, auth, and live status.</p>
+          <h3>Unlimited clients</h3>
+          <p>Creating a client is just picking a saved broker — host, port and transport fill in automatically. Add its client ID, auth and live status, and you're connected.</p>
         </div>
         <div class="feature">
           <div class="icon">⌁</div>
           <h3>TCP, TLS, WS &amp; WSS</h3>
-          <p>Full MQTT 3.1.1 and 5.0 support over every standard transport, with per-profile keep-alive, clean-session, and timeout controls.</p>
+          <p>Full MQTT 3.1.1 and 5.0 support over every standard transport, with per-client keep-alive, clean-session, and timeout controls.</p>
         </div>
         <div class="feature">
           <div class="icon">▣</div>
@@ -149,7 +155,7 @@
         <div class="feature">
           <div class="icon">⏣</div>
           <h3>Smart topic suggestions</h3>
-          <p>Subscriptions and publishes both surface topics you've used before on that broker, so you're never retyping long topic paths.</p>
+          <p>Subscriptions and publishes both surface topics you've used before on that client, so you're never retyping long topic paths.</p>
         </div>
       </div>
     </div>
@@ -161,12 +167,12 @@
         <span class="tag">Security &amp; privacy</span>
         <h2>Your credentials never leave your device.</h2>
         <p style="color:var(--text-secondary); font-size:15px;">
-          There's no account, no backend, and nothing phoning home. MQTT Connect only talks to the brokers you configure.
+          There's no account, no backend, and nothing phoning home. MQTT Connect only talks to the brokers your clients connect to.
         </p>
         <div class="security-list">
           <div class="security-item">
             <div class="mark">✓</div>
-            <div><strong>Encrypted at rest</strong><p>Broker profiles, usernames, passwords and certificates are held in the OS keychain and encrypted storage — never in plain text.</p></div>
+            <div><strong>Encrypted at rest</strong><p>Broker profiles, clients, usernames, passwords and certificates are held in the OS keychain and encrypted storage — never in plain text.</p></div>
           </div>
           <div class="security-item">
             <div class="mark">✓</div>
@@ -178,7 +184,7 @@
           </div>
           <div class="security-item">
             <div class="mark">✓</div>
-            <div><strong>Certificates stay put</strong><p>Client certificates and private keys are read once through the system file picker and never included in profile export.</p></div>
+            <div><strong>Certificates stay put</strong><p>Client certificates and private keys are read once through the system file picker and never included in client export.</p></div>
           </div>
         </div>
       </div>
@@ -189,7 +195,7 @@
         <div><span class="prompt">›</span> Hide payloads in app switcher&nbsp;&nbsp;&nbsp;<span class="ok">ON</span></div>
         <div>&nbsp;</div>
         <div class="l1">$ mqtt-connect · settings · data</div>
-        <div><span class="prompt">›</span> Export profiles (no secrets)</div>
+        <div><span class="prompt">›</span> Export clients (no secrets)</div>
         <div><span class="prompt">›</span> Erase all data&nbsp;&nbsp;&nbsp;<span class="warn">local only</span></div>
         <div>&nbsp;</div>
         <div class="l1">MQTT Connect 1.0 — offline · no telemetry</div>
@@ -202,9 +208,19 @@
       <div class="section-head">
         <span class="tag">Inside the app</span>
         <h2>A workspace for every connection.</h2>
-        <p>Tabs for topics, publishing, and the live feed — all scoped to the broker profile you're working in.</p>
+        <p>Tabs for topics, publishing, and the live feed — all scoped to the client you're working in.</p>
       </div>
       <div class="showcase-grid">
+        <div class="mini-screen">
+          <h4>New client</h4>
+          <div class="sub">pick a broker — the rest fills in</div>
+          <div class="chip-row"><span class="chip accent">Broker: Factory Floor · TLS · 8883</span></div>
+          <div class="kv-row"><span class="k">Host</span><span class="v">broker.line3.internal</span></div>
+          <div class="kv-row"><span class="k">Port · transport</span><span class="v">8883 · TLS</span></div>
+          <div class="kv-row"><span class="k">Client ID</span><span class="v accent">mqtt-connect-4f21a9</span></div>
+          <div class="chip-row"><span class="chip">host · port · transport auto-filled</span></div>
+        </div>
+
         <div class="mini-screen">
           <h4>Live feed</h4>
           <div class="sub">factory-floor-line-3</div>
@@ -241,7 +257,7 @@
   <section id="get">
     <div class="wrap">
       <div class="cta-band">
-        <h2>Take your brokers with you.</h2>
+        <h2>Take your clients with you.</h2>
         <p>MQTT Connect is built for iOS and Android — request access below.</p>
         <div class="cta-row" style="justify-content:center;">
           <a class="btn btn-primary" href="mailto:shreyansh@shrynshjn.com?subject=MQTT%20Connect%20access">Request early access</a>
