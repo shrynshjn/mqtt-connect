@@ -1,0 +1,113 @@
+diff --git a/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java b/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java
+index 1e0622f..0f761ec 100644
+--- a/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java
++++ b/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java
+@@ -191,9 +191,31 @@ final class SSLCertificateHelper {
+             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+             keyManagerFactory.init(keyStore, new char[0]);
+ 
++            // PATCHED (mqtt-connect): the upstream code always used BlindTrustManager here,
++            // silently disabling server certificate verification for every mTLS connection
++            // even when a CA was supplied — the CA cert was stashed in `keyStore` above but
++            // never actually used to build a TrustManager. When a CA is present, build a real
++            // TrustManagerFactory from it so the server certificate is genuinely validated.
++            // BlindTrustManager is kept only as the fallback for the (rarer) CA-less
++            // client-cert-only case, matching prior behavior for that path.
++            TrustManager[] trustManagers;
++            if (optionResCa != null) {
++                KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
++                trustStore.load(null, null);
++                InputStream caInput = getResolvableinputStream(context, optionResCa);
++                Certificate ca = CertificateFactory.getInstance("X.509").generateCertificate(caInput);
++                caInput.close();
++                trustStore.setCertificateEntry(keystoreInfo.getCaAlias(), ca);
++                TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
++                tmf.init(trustStore);
++                trustManagers = tmf.getTrustManagers();
++            } else {
++                trustManagers = new TrustManager[]{new BlindTrustManager()};
++            }
++
+             // Create an SSL context that uses the created trust manager
+             SSLContext sslContext = SSLContext.getInstance("TLS");
+-            sslContext.init(keyManagerFactory.getKeyManagers(), new TrustManager[]{new BlindTrustManager()}, null);
++            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagers, null);
+             return sslContext.getSocketFactory();
+         } else {
+             // Keep old behavior
+diff --git a/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m b/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m
+index a3df69c..0ce5b5b 100644
+--- a/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m
++++ b/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m
+@@ -514,15 +514,14 @@ - (void)socket:(GCDAsyncSocket *)sock
+         return;
+     }
+ 
+-    // Server certificate
+-    SecCertificateRef serverCertificate = SecTrustGetCertificateAtIndex(trust, 0);
+-    CFDataRef serverCertificateData = SecCertificateCopyData(serverCertificate);
+-    const UInt8 *const serverData = CFDataGetBytePtr(serverCertificateData);
+-    const CFIndex serverDataSize = CFDataGetLength(serverCertificateData);
+-    NSData *cert1 = [NSData dataWithBytes:serverData
+-                                   length:(NSUInteger)serverDataSize];
+-
+-    // Local certificate
++    // PATCHED (mqtt-connect): the upstream code required the server's leaf certificate
++    // to byte-for-byte equal the configured "ca" — i.e. exact-leaf pinning, not CA/chain
++    // validation. That means a normal CA-signed broker (the server presents a leaf signed
++    // *by* the CA, not the CA itself) would always fail here, since a leaf and its issuing
++    // CA are different certificates. Replaced with real chain validation: the configured
++    // CA is set as the trust's sole anchor (matching the Android-side fix — not merged
++    // with the OS default trust store, since the user explicitly configured this CA as
++    // the trust root for this profile) and the presented chain is evaluated against it.
+     NSString *pemCaCert = [_resolvableCaCert resolve];
+     if (!pemCaCert) {
+         RCTLogWarn(@"Failed to resolve CA certificate");
+@@ -538,29 +537,32 @@ - (void)socket:(GCDAsyncSocket *)sock
+                             options:
+                                 NSDataBase64DecodingIgnoreUnknownCharacters];
+ 
+-    SecCertificateRef localCertificate =
++    SecCertificateRef caCertificate =
+         SecCertificateCreateWithData(NULL, (CFDataRef)pemCaCertData);
+-    if (!localCertificate) {
+-        [NSException raise:@"Configuration invalid"
+-                    format:@"Failed to parse PEM certificate"];
++    if (!caCertificate) {
++        RCTLogWarn(@"Failed to parse configured CA certificate");
++        completionHandler(NO);
++        return;
+     }
+ 
+-    CFDataRef myCertData = SecCertificateCopyData(localCertificate);
+-    const UInt8 *const localData = CFDataGetBytePtr(myCertData);
+-    const CFIndex localDataSize = CFDataGetLength(myCertData);
+-    NSData *cert2 = [NSData dataWithBytes:localData
+-                                   length:(NSUInteger)localDataSize];
++    NSArray *anchors = @[ (__bridge id)caCertificate ];
++    OSStatus setAnchorsStatus =
++        SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)anchors);
++    OSStatus onlyStatus = SecTrustSetAnchorCertificatesOnly(trust, true);
++    CFRelease(caCertificate);
+ 
+-    if (cert1 == nil || cert2 == nil) {
+-        RCTLogWarn(@"BAD SSL CERTIFICATE");
++    if (setAnchorsStatus != errSecSuccess || onlyStatus != errSecSuccess) {
++        RCTLogWarn(@"Failed to configure trust anchor for CA validation");
+         completionHandler(NO);
+         return;
+     }
+-    if ([cert1 isEqualToData:cert2]) {
+-        completionHandler(YES);
+-    } else {
+-        completionHandler(NO);
++
++    CFErrorRef evalError = NULL;
++    BOOL trusted = SecTrustEvaluateWithError(trust, &evalError);
++    if (evalError) {
++        CFRelease(evalError);
+     }
++    completionHandler(trusted ? YES : NO);
+ }
+ 
+ - (void)socket:(GCDAsyncSocket *)sock
