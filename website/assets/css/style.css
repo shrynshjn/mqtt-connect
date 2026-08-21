@@ -223,6 +223,22 @@ h2 { font-size: 32px; letter-spacing: -0.01em; margin: 0 0 14px; font-weight: 70
 .kv-row .v.accent { color: var(--accent); }
 .payload-box { font-family: var(--mono); font-size: 10px; background: var(--bg); border: 1px solid var(--hairline); border-radius: 8px; padding: 9px; color: var(--text); white-space: pre; overflow: hidden; }
 
+/* Store cards */
+.store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 32px 0 0; text-align: left; }
+.store-card {
+  background: var(--bg); border: 1px solid var(--hairline); border-radius: var(--radius-lg);
+  padding: 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+}
+.store-card .platform { font-size: 16px; font-weight: 700; }
+.store-badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-dim); border: 1px solid var(--hairline-hi);
+  border-radius: var(--radius-pill); padding: 3px 10px;
+}
+.store-card p { font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.55; }
+.store-card .btn { width: 100%; justify-content: center; margin-top: auto; }
+.btn-disabled { background: var(--surface-raised); color: var(--text-tertiary); border: 1px solid var(--hairline); cursor: not-allowed; }
+
 /* CTA band */
 .cta-band {
   text-align: center; border: 1px solid var(--hairline); background: var(--surface);
@@ -273,4 +289,5 @@ footer { border-top: 1px solid var(--hairline); padding: 48px 0 32px; }
 @media (max-width: 560px) {
   .feature-grid { grid-template-columns: 1fr; }
   .footer-grid { flex-direction: column; }
+  .store-grid { grid-template-columns: 1fr; }
 }
