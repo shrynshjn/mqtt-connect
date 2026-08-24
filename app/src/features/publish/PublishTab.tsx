@@ -17,7 +17,12 @@ import { suggestTopics } from '../../topics/topicSuggestions';
 import { isValidPublishTopic } from '../../mqtt/topicMatch';
 import { addSnippet } from '../../storage/snippetRepo';
 import { stripSmartPunctuation } from '../../ui/sanitizeText';
-import { emptyRow, jsonTextToRows, rowsToJsonText, type KVRow } from '../../ui/jsonKeyValue';
+import {
+  emptyRow,
+  jsonTextToRows,
+  rowsToJsonText,
+  type KVRow,
+} from '../../ui/jsonKeyValue';
 import { KeyValueEditor } from './KeyValueEditor';
 import type { ProfileId, QoS } from '../../types/profile';
 
@@ -136,25 +141,27 @@ export function PublishTab({
               { value: 'keyvalue', label: 'Key-value' },
             ]}
             value={jsonEditor}
-            onChange={v => (v === 'keyvalue' ? switchToKeyValue() : setJsonEditor('text'))}
+            onChange={v =>
+              v === 'keyvalue' ? switchToKeyValue() : setJsonEditor('text')
+            }
           />
         )}
 
         {format === 'JSON' && jsonEditor === 'keyvalue' ? (
           <KeyValueEditor rows={rows} onChange={updateRows} />
         ) : (
-        <TextInput
-          value={payload}
-          onChangeText={v => setPayload(stripSmartPunctuation(v))}
-          multiline
-          numberOfLines={6}
-          style={styles.payloadInput}
-          placeholder=""
-          placeholderTextColor={colors.textTertiary}
-          autoCapitalize="none"
-          autoCorrect={false}
-          spellCheck={false}
-        />
+          <TextInput
+            value={payload}
+            onChangeText={v => setPayload(stripSmartPunctuation(v))}
+            multiline
+            numberOfLines={6}
+            style={styles.payloadInput}
+            placeholder=""
+            placeholderTextColor={colors.textTertiary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
+          />
         )}
       </View>
 

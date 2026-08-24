@@ -1,4 +1,4 @@
-package com.shrynshjn.mqttconnect
+package com.shrynshjn.secure.mqtt.connect
 
 import android.app.Application
 import com.facebook.react.PackageList

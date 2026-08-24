@@ -43,7 +43,9 @@ export function WorkspaceHeader({
             </Text>
           </View>
           <Text style={styles.host} numberOfLines={1}>
-            {broker ? `${schemeFor(broker.transport)}://${broker.host}:${broker.port}` : 'broker not found'}
+            {broker
+              ? `${schemeFor(broker.transport)}://${broker.host}:${broker.port}`
+              : 'broker not found'}
           </Text>
         </View>
         <Pressable onPress={onEditCert} hitSlop={8} style={styles.editBtn}>

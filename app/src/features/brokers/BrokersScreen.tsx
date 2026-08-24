@@ -14,7 +14,9 @@ export function BrokersScreen({ navigation }: Props) {
   const [brokers, setBrokers] = useState<Broker[]>([]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => setBrokers(listBrokers()));
+    const unsubscribe = navigation.addListener('focus', () =>
+      setBrokers(listBrokers()),
+    );
     return unsubscribe;
   }, [navigation]);
 
@@ -34,7 +36,12 @@ export function BrokersScreen({ navigation }: Props) {
         renderItem={({ item }) => {
           const clientCount = clientsUsingBroker(item.id).length;
           return (
-            <Pressable style={styles.row} onPress={() => navigation.navigate('BrokerForm', { brokerId: item.id })}>
+            <Pressable
+              style={styles.row}
+              onPress={() =>
+                navigation.navigate('BrokerForm', { brokerId: item.id })
+              }
+            >
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowName}>{item.name}</Text>
                 <Text style={styles.rowHost}>
@@ -48,9 +55,16 @@ export function BrokersScreen({ navigation }: Props) {
             </Pressable>
           );
         }}
-        ListEmptyComponent={<Text style={styles.emptyHint}>No saved brokers yet — add one from a client's form.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.emptyHint}>
+            No saved brokers yet — add one from a client's form.
+          </Text>
+        }
         ListFooterComponent={
-          <Pressable style={styles.addRow} onPress={() => navigation.navigate('BrokerForm', {})}>
+          <Pressable
+            style={styles.addRow}
+            onPress={() => navigation.navigate('BrokerForm', {})}
+          >
             <Text style={styles.addText}>+ Add broker</Text>
           </Pressable>
         }
@@ -71,7 +85,16 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.hairline,
     borderBottomWidth: 1,
   },
-  backBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surfaceRaised, borderColor: colors.hairline, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  backBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceRaised,
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   backIcon: { color: colors.textSecondary, fontSize: 15 },
   title: { fontSize: 17, fontWeight: '700', color: colors.text },
   list: { padding: space.md, gap: space.sm },
@@ -87,10 +110,32 @@ const styles = StyleSheet.create({
     marginBottom: space.sm,
   },
   rowName: { fontSize: 15, fontWeight: '600', color: colors.text },
-  rowHost: { fontFamily: font.mono, fontSize: 11, color: colors.textTertiary, marginTop: 2 },
-  rowMeta: { fontFamily: font.mono, fontSize: 10, color: colors.textTertiary, marginTop: 4 },
+  rowHost: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
+  rowMeta: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    color: colors.textTertiary,
+    marginTop: 4,
+  },
   chevron: { fontSize: 16, color: colors.textTertiary },
-  emptyHint: { fontSize: 12.5, color: colors.textTertiary, textAlign: 'center', paddingVertical: space.xl },
-  addRow: { borderColor: colors.hairline, borderWidth: 1, borderStyle: 'dashed', borderRadius: radius.xl, padding: space.lg, alignItems: 'center' },
+  emptyHint: {
+    fontSize: 12.5,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    paddingVertical: space.xl,
+  },
+  addRow: {
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: radius.xl,
+    padding: space.lg,
+    alignItems: 'center',
+  },
   addText: { color: colors.textTertiary, fontSize: 13 },
 });

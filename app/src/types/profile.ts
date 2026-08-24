@@ -102,6 +102,12 @@ export function defaultPortFor(transport: Transport): number {
 // (matching react-native-tcp-socket's own vocabulary), but every broker, doc, and other
 // MQTT client names these connections "mqtt://" and "mqtts://", so that's what should
 // show up anywhere a connection string is displayed to the user.
-export function schemeFor(transport: Transport): 'mqtt' | 'mqtts' | 'ws' | 'wss' {
-  return transport === 'tcp' ? 'mqtt' : transport === 'tls' ? 'mqtts' : transport;
+export function schemeFor(
+  transport: Transport,
+): 'mqtt' | 'mqtts' | 'ws' | 'wss' {
+  return transport === 'tcp'
+    ? 'mqtt'
+    : transport === 'tls'
+      ? 'mqtts'
+      : transport;
 }

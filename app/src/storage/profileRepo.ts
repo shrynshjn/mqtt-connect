@@ -18,11 +18,16 @@ interface LegacyProfileShape {
   transport?: Transport;
 }
 
-function migrateProfile(raw: ConnectionProfile & LegacyProfileShape): ConnectionProfile {
+function migrateProfile(
+  raw: ConnectionProfile & LegacyProfileShape,
+): ConnectionProfile {
   if (raw.brokerId || !raw.host) return raw;
 
   const existing = listBrokers().find(
-    b => b.host === raw.host && b.port === raw.port && b.transport === raw.transport,
+    b =>
+      b.host === raw.host &&
+      b.port === raw.port &&
+      b.transport === raw.transport,
   );
   const brokerId = existing?.id ?? newBrokerId();
   if (!existing) {
@@ -38,7 +43,8 @@ function migrateProfile(raw: ConnectionProfile & LegacyProfileShape): Connection
     });
   }
 
-  const migrated = { ...raw, brokerId } as ConnectionProfile & LegacyProfileShape;
+  const migrated = { ...raw, brokerId } as ConnectionProfile &
+    LegacyProfileShape;
   delete migrated.host;
   delete migrated.port;
   delete migrated.transport;
@@ -77,7 +83,9 @@ export function listProfiles(): ConnectionProfile[] {
 export function getProfile(id: ProfileId): ConnectionProfile | undefined {
   const raw = getSecureKv().getString(key(id));
   if (!raw) return undefined;
-  return migrateProfile(JSON.parse(raw) as ConnectionProfile & LegacyProfileShape);
+  return migrateProfile(
+    JSON.parse(raw) as ConnectionProfile & LegacyProfileShape,
+  );
 }
 
 export function saveProfile(profile: ConnectionProfile): void {

@@ -14,10 +14,22 @@ export interface BrokerDraft {
 
 /** Shared Name/Host/Port/Protocol fields — used by both the full broker form and the
  * inline "new broker" mode inside the picker, so the two never drift apart. */
-export function BrokerFields({ draft, onChange }: { draft: BrokerDraft; onChange: (draft: BrokerDraft) => void }) {
+export function BrokerFields({
+  draft,
+  onChange,
+}: {
+  draft: BrokerDraft;
+  onChange: (draft: BrokerDraft) => void;
+}) {
   function onTransportChange(next: Transport) {
-    const wasDefaultPort = draft.port === '' || draft.port === String(defaultPortFor(draft.transport));
-    onChange({ ...draft, transport: next, port: wasDefaultPort ? String(defaultPortFor(next)) : draft.port });
+    const wasDefaultPort =
+      draft.port === '' ||
+      draft.port === String(defaultPortFor(draft.transport));
+    onChange({
+      ...draft,
+      transport: next,
+      port: wasDefaultPort ? String(defaultPortFor(next)) : draft.port,
+    });
   }
 
   return (
@@ -27,7 +39,9 @@ export function BrokerFields({ draft, onChange }: { draft: BrokerDraft; onChange
           <Text style={styles.label}>Name</Text>
           <TextInput
             value={draft.name}
-            onChangeText={v => onChange({ ...draft, name: stripSmartPunctuation(v) })}
+            onChangeText={v =>
+              onChange({ ...draft, name: stripSmartPunctuation(v) })
+            }
             placeholder="Production EMQX"
             placeholderTextColor={colors.textTertiary}
             style={styles.input}
@@ -37,7 +51,9 @@ export function BrokerFields({ draft, onChange }: { draft: BrokerDraft; onChange
           <Text style={styles.label}>Host</Text>
           <TextInput
             value={draft.host}
-            onChangeText={v => onChange({ ...draft, host: stripSmartPunctuation(v) })}
+            onChangeText={v =>
+              onChange({ ...draft, host: stripSmartPunctuation(v) })
+            }
             placeholder="broker.example.com"
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="none"
@@ -89,6 +105,12 @@ const styles = StyleSheet.create({
   },
   rowLast: { borderBottomWidth: 0 },
   label: { fontSize: 14, color: colors.textSecondary, width: 60 },
-  input: { flex: 1, textAlign: 'right', fontSize: 14, color: colors.text, padding: 0 },
+  input: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: 14,
+    color: colors.text,
+    padding: 0,
+  },
   mono: { fontFamily: font.mono, fontSize: 13 },
 });

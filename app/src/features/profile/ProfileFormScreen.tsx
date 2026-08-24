@@ -17,10 +17,7 @@ import { useProfilesStore } from '../../state/profilesStore';
 import { newProfileId, getProfile } from '../../storage/profileRepo';
 import { newSecretId, setSecret, getSecret } from '../../storage/secretRepo';
 import { certMetaFromPem } from '../../crypto/certInfo';
-import {
-  parsePrivateKeyPem,
-  toCanonicalPem,
-} from '../../crypto/keyNormalize';
+import { parsePrivateKeyPem, toCanonicalPem } from '../../crypto/keyNormalize';
 import { unwrapPkcs12 } from '../../crypto/pkcs12';
 import { splitAndClassifyPem } from '../../crypto/pem';
 import { pickAndReadFile } from '../../crypto/filePicker';
@@ -65,7 +62,9 @@ export function ProfileFormScreen({ route, navigation }: Props) {
   const remove = useProfilesStore(s => s.remove);
 
   const [name, setName] = useState(existing?.name ?? '');
-  const [brokerId, setBrokerId] = useState<BrokerId | null>(existing?.brokerId ?? null);
+  const [brokerId, setBrokerId] = useState<BrokerId | null>(
+    existing?.brokerId ?? null,
+  );
   const [pickerOpen, setPickerOpen] = useState(false);
   const broker = brokerId ? getBroker(brokerId) : undefined;
   const [clientId, setClientId] = useState(
@@ -267,7 +266,10 @@ export function ProfileFormScreen({ route, navigation }: Props) {
       return;
     }
     if (!brokerId) {
-      Alert.alert('Broker required', 'Pick which broker this client connects to.');
+      Alert.alert(
+        'Broker required',
+        'Pick which broker this client connects to.',
+      );
       return;
     }
     if (isTls && !ca) {
@@ -431,8 +433,8 @@ export function ProfileFormScreen({ route, navigation }: Props) {
             </View>
           </Pressable>
           <Text style={styles.hint}>
-            A broker is saved separately so multiple clients can share the same one — pick an existing broker or add
-            a new one here.
+            A broker is saved separately so multiple clients can share the same
+            one — pick an existing broker or add a new one here.
           </Text>
         </View>
 
@@ -683,7 +685,12 @@ const styles = StyleSheet.create({
   },
   showHide: { fontSize: 12, fontWeight: '600', color: colors.accent },
   brokerName: { fontSize: 14, fontWeight: '600', color: colors.text },
-  brokerHost: { fontFamily: font.mono, fontSize: 11, color: colors.textTertiary, marginTop: 2 },
+  brokerHost: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
   brokerPlaceholder: { flex: 1, fontSize: 14, color: colors.textTertiary },
   chevron: { fontSize: 16, color: colors.textTertiary },
   certCard: {

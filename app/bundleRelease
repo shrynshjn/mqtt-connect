@@ -1,0 +1,5 @@
+rm ~/apks/mqtt-connect.aab
+cd android
+./gradlew bundleRelease
+mv app/build/outputs/bundle/release/app-release.aab ~/apks/mqtt-connect.aab
+cd ..

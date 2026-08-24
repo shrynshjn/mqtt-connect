@@ -1,4 +1,4 @@
-package com.shrynshjn.mqttconnect
+package com.shrynshjn.secure.mqtt.connect
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

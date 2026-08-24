@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { colors, font, radius, space } from '../../ui/theme';
 import { schemeFor } from '../../types/profile';
 import { listBrokers, newBrokerId, saveBroker } from '../../storage/brokerRepo';
 import type { Broker } from '../../types/broker';
 import { BrokerFields, type BrokerDraft } from './BrokerFields';
 
-const EMPTY_DRAFT: BrokerDraft = { name: '', host: '', port: '8883', transport: 'tls' };
+const EMPTY_DRAFT: BrokerDraft = {
+  name: '',
+  host: '',
+  port: '8883',
+  transport: 'tls',
+};
 
 export function BrokerPickerModal({
   visible,
@@ -45,17 +57,30 @@ export function BrokerPickerModal({
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={close}
+    >
       <Pressable style={styles.backdrop} onPress={close}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           <View style={styles.handle} />
-          <Text style={styles.title}>{mode === 'list' ? 'Choose a broker' : 'New broker'}</Text>
+          <Text style={styles.title}>
+            {mode === 'list' ? 'Choose a broker' : 'New broker'}
+          </Text>
 
           {mode === 'list' ? (
             <ScrollView style={styles.list}>
-              {brokers.length === 0 && <Text style={styles.emptyHint}>No saved brokers yet.</Text>}
+              {brokers.length === 0 && (
+                <Text style={styles.emptyHint}>No saved brokers yet.</Text>
+              )}
               {brokers.map(b => (
-                <Pressable key={b.id} style={styles.row} onPress={() => onSelect(b)}>
+                <Pressable
+                  key={b.id}
+                  style={styles.row}
+                  onPress={() => onSelect(b)}
+                >
                   <View style={{ flex: 1 }}>
                     <Text style={styles.rowName}>{b.name}</Text>
                     <Text style={styles.rowHost}>
@@ -65,7 +90,10 @@ export function BrokerPickerModal({
                   <Text style={styles.chevron}>›</Text>
                 </Pressable>
               ))}
-              <Pressable style={styles.newBrokerRow} onPress={() => setMode('create')}>
+              <Pressable
+                style={styles.newBrokerRow}
+                onPress={() => setMode('create')}
+              >
                 <Text style={styles.newBrokerText}>+ New broker</Text>
               </Pressable>
             </ScrollView>
@@ -76,7 +104,10 @@ export function BrokerPickerModal({
                 <Pressable style={styles.primaryBtn} onPress={createAndSelect}>
                   <Text style={styles.primaryText}>Save & use this broker</Text>
                 </Pressable>
-                <Pressable style={styles.ghostBtn} onPress={() => setMode('list')}>
+                <Pressable
+                  style={styles.ghostBtn}
+                  onPress={() => setMode('list')}
+                >
                   <Text style={styles.ghostText}>Back</Text>
                 </Pressable>
               </View>
@@ -89,7 +120,11 @@ export function BrokerPickerModal({
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(4,7,13,0.6)', justifyContent: 'flex-end' },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(4,7,13,0.6)',
+    justifyContent: 'flex-end',
+  },
   sheet: {
     backgroundColor: colors.surface,
     borderTopColor: colors.hairlineHi,
@@ -100,10 +135,20 @@ const styles = StyleSheet.create({
     gap: space.md,
     maxHeight: '80%',
   },
-  handle: { width: 38, height: 4, borderRadius: 2, backgroundColor: colors.hairlineHi, alignSelf: 'center' },
+  handle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.hairlineHi,
+    alignSelf: 'center',
+  },
   title: { fontSize: 16, fontWeight: '700', color: colors.text },
   list: { gap: space.sm },
-  emptyHint: { fontSize: 12.5, color: colors.textTertiary, paddingVertical: space.sm },
+  emptyHint: {
+    fontSize: 12.5,
+    color: colors.textTertiary,
+    paddingVertical: space.sm,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -116,7 +161,12 @@ const styles = StyleSheet.create({
     marginBottom: space.sm,
   },
   rowName: { fontSize: 14, fontWeight: '600', color: colors.text },
-  rowHost: { fontFamily: font.mono, fontSize: 11, color: colors.textTertiary, marginTop: 2 },
+  rowHost: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
   chevron: { fontSize: 16, color: colors.textTertiary },
   newBrokerRow: {
     borderColor: colors.hairline,
@@ -128,8 +178,22 @@ const styles = StyleSheet.create({
   },
   newBrokerText: { fontSize: 13, fontWeight: '600', color: colors.accent },
   actions: { flexDirection: 'row', gap: space.sm },
-  primaryBtn: { flex: 1, alignItems: 'center', backgroundColor: colors.accent, borderRadius: radius.md, paddingVertical: 13 },
+  primaryBtn: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: radius.md,
+    paddingVertical: 13,
+  },
   primaryText: { fontSize: 14, fontWeight: '700', color: colors.bg },
-  ghostBtn: { alignItems: 'center', justifyContent: 'center', borderColor: colors.hairline, borderWidth: 1, borderRadius: radius.md, paddingVertical: 13, paddingHorizontal: 16 },
+  ghostBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+  },
   ghostText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
 });

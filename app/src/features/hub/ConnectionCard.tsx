@@ -76,7 +76,9 @@ export function ConnectionCard({
       </View>
 
       <Text style={styles.host} numberOfLines={1}>
-        {broker ? `${schemeFor(broker.transport)}://${broker.host}:${broker.port}` : 'broker not found'}
+        {broker
+          ? `${schemeFor(broker.transport)}://${broker.host}:${broker.port}`
+          : 'broker not found'}
         {profile.tls?.identity ? '  ▣ cert' : ''}
       </Text>
 

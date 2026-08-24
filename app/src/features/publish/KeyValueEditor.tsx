@@ -4,7 +4,13 @@ import { colors, font, radius, space } from '../../ui/theme';
 import { stripSmartPunctuation } from '../../ui/sanitizeText';
 import { emptyRow, type KVRow } from '../../ui/jsonKeyValue';
 
-export function KeyValueEditor({ rows, onChange }: { rows: KVRow[]; onChange: (rows: KVRow[]) => void }) {
+export function KeyValueEditor({
+  rows,
+  onChange,
+}: {
+  rows: KVRow[];
+  onChange: (rows: KVRow[]) => void;
+}) {
   function updateRow(id: string, patch: Partial<KVRow>) {
     onChange(rows.map(r => (r.id === id ? { ...r, ...patch } : r)));
   }
@@ -24,7 +30,9 @@ export function KeyValueEditor({ rows, onChange }: { rows: KVRow[]; onChange: (r
         <View key={row.id} style={styles.row}>
           <TextInput
             value={row.key}
-            onChangeText={v => updateRow(row.id, { key: stripSmartPunctuation(v) })}
+            onChangeText={v =>
+              updateRow(row.id, { key: stripSmartPunctuation(v) })
+            }
             placeholder="key"
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="none"
@@ -34,7 +42,9 @@ export function KeyValueEditor({ rows, onChange }: { rows: KVRow[]; onChange: (r
           />
           <TextInput
             value={row.value}
-            onChangeText={v => updateRow(row.id, { value: stripSmartPunctuation(v) })}
+            onChangeText={v =>
+              updateRow(row.id, { value: stripSmartPunctuation(v) })
+            }
             placeholder="value"
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="none"
@@ -42,17 +52,25 @@ export function KeyValueEditor({ rows, onChange }: { rows: KVRow[]; onChange: (r
             spellCheck={false}
             style={[styles.input, styles.valueCol]}
           />
-          <Pressable onPress={() => removeRow(row.id)} hitSlop={8} style={styles.removeBtn}>
+          <Pressable
+            onPress={() => removeRow(row.id)}
+            hitSlop={8}
+            style={styles.removeBtn}
+          >
             <Text style={styles.removeText}>✕</Text>
           </Pressable>
         </View>
       ))}
-      <Pressable onPress={() => onChange([...rows, emptyRow()])} style={styles.addRow}>
+      <Pressable
+        onPress={() => onChange([...rows, emptyRow()])}
+        style={styles.addRow}
+      >
         <Text style={styles.addText}>+ Add key</Text>
       </Pressable>
       <Text style={styles.hint}>
-        A value that parses as JSON (numbers, true/false, null, {'{...}'}, [...]) keeps that type — anything else is
-        stored as text. Quote a value ("007") to force it to stay text.
+        A value that parses as JSON (numbers, true/false, null, {'{...}'},
+        [...]) keeps that type — anything else is stored as text. Quote a value
+        ("007") to force it to stay text.
       </Text>
     </View>
   );
@@ -94,5 +112,10 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   addText: { fontSize: 12, color: colors.textTertiary },
-  hint: { fontFamily: font.mono, fontSize: 9.5, lineHeight: 14, color: colors.textTertiary },
+  hint: {
+    fontFamily: font.mono,
+    fontSize: 9.5,
+    lineHeight: 14,
+    color: colors.textTertiary,
+  },
 });

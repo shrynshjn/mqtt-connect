@@ -25,7 +25,11 @@ import {
   moveToActive,
   moveToSaved,
 } from '../storage/subscriptionRepo';
-import { loadMessages, saveMessages, clearMessages as clearPersistedMessages } from '../storage/messageRepo';
+import {
+  loadMessages,
+  saveMessages,
+  clearMessages as clearPersistedMessages,
+} from '../storage/messageRepo';
 import { getPrefs } from '../storage/prefsRepo';
 
 // mqtt's React Native build (dist/mqtt.esm.js, selected via the package's "react-native"
@@ -83,7 +87,16 @@ export class ManagedConnection {
     this.messages = [];
     this.messagesListeners.forEach(l => l(this.messages));
     clearPersistedMessages(this.profile.id);
-    this.setSnapshot({ counters: { ...this.snapshot.counters, rx: 0, tx: 0, bytesRx: 0, bytesTx: 0, droppedFromLog: 0 } });
+    this.setSnapshot({
+      counters: {
+        ...this.snapshot.counters,
+        rx: 0,
+        tx: 0,
+        bytesRx: 0,
+        bytesTx: 0,
+        droppedFromLog: 0,
+      },
+    });
   }
 
   onSnapshotChange(cb: SnapshotListener): () => void {

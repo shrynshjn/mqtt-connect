@@ -7,9 +7,12 @@ export interface KVRow {
 }
 
 function newRowId(): string {
-  return 'row_' + Array.from(crypto.getRandomValues(new Uint8Array(6)))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  return (
+    'row_' +
+    Array.from(crypto.getRandomValues(new Uint8Array(6)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+  );
 }
 
 export function emptyRow(): KVRow {
@@ -30,15 +33,18 @@ export function jsonTextToRows(text: string): KVRow[] | null {
   } catch {
     return null;
   }
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
+    return null;
 
-  return Object.entries(parsed as Record<string, unknown>).map(([key, value]) => ({
-    id: newRowId(),
-    key,
-    // Strings show unquoted so they're editable as plain text; every other type
-    // (including nested objects/arrays) shows its literal JSON text.
-    value: typeof value === 'string' ? value : JSON.stringify(value),
-  }));
+  return Object.entries(parsed as Record<string, unknown>).map(
+    ([key, value]) => ({
+      id: newRowId(),
+      key,
+      // Strings show unquoted so they're editable as plain text; every other type
+      // (including nested objects/arrays) shows its literal JSON text.
+      value: typeof value === 'string' ? value : JSON.stringify(value),
+    }),
+  );
 }
 
 // A row's value is interpreted as JSON if it parses cleanly (so `21`, `true`, `null`,

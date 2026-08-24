@@ -1,16 +1,30 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../app/navigation';
 import { colors, space } from '../../ui/theme';
-import { getBroker, newBrokerId, saveBroker, deleteBroker } from '../../storage/brokerRepo';
+import {
+  getBroker,
+  newBrokerId,
+  saveBroker,
+  deleteBroker,
+} from '../../storage/brokerRepo';
 import { clientsUsingBroker } from '../../storage/profileRepo';
 import { BrokerFields, type BrokerDraft } from './BrokerFields';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BrokerForm'>;
 
 export function BrokerFormScreen({ route, navigation }: Props) {
-  const existing = route.params.brokerId ? getBroker(route.params.brokerId) : undefined;
+  const existing = route.params.brokerId
+    ? getBroker(route.params.brokerId)
+    : undefined;
   const [draft, setDraft] = useState<BrokerDraft>({
     name: existing?.name ?? '',
     host: existing?.host ?? '',
@@ -46,17 +60,21 @@ export function BrokerFormScreen({ route, navigation }: Props) {
       );
       return;
     }
-    Alert.alert('Delete broker', `Delete "${existing.name}"? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteBroker(existing.id);
-          navigation.goBack();
+    Alert.alert(
+      'Delete broker',
+      `Delete "${existing.name}"? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteBroker(existing.id);
+            navigation.goBack();
+          },
         },
-      },
-    ]);
+      ],
+    );
   }
 
   return (
@@ -65,7 +83,9 @@ export function BrokerFormScreen({ route, navigation }: Props) {
         <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.cancel}>Cancel</Text>
         </Pressable>
-        <Text style={styles.title}>{existing ? 'Edit broker' : 'New broker'}</Text>
+        <Text style={styles.title}>
+          {existing ? 'Edit broker' : 'New broker'}
+        </Text>
         <Pressable onPress={onSave}>
           <Text style={styles.save}>Save</Text>
         </Pressable>

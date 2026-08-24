@@ -29,7 +29,10 @@ export function connect(profileId: ProfileId): void {
   try {
     getOrCreate(profileId).connect();
   } catch (err) {
-    console.warn(`connect(${profileId}) failed before a connection could even be attempted:`, err);
+    console.warn(
+      `connect(${profileId}) failed before a connection could even be attempted:`,
+      err,
+    );
   }
 }
 

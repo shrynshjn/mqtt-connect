@@ -22,9 +22,12 @@ function writeIndex(ids: BrokerId[]): void {
 }
 
 export function newBrokerId(): BrokerId {
-  return 'brk_' + Array.from(crypto.getRandomValues(new Uint8Array(8)))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  return (
+    'brk_' +
+    Array.from(crypto.getRandomValues(new Uint8Array(8)))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+  );
 }
 
 export function listBrokers(): Broker[] {
