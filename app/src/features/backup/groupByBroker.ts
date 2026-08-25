@@ -14,8 +14,6 @@ export function groupProfilesByBroker<B, P>(
 ): BrokerGroup<B, P>[] {
   return brokers.map(broker => ({
     broker,
-    profiles: profiles.filter(
-      p => brokerIdOfProfile(p) === idOfBroker(broker),
-    ),
+    profiles: profiles.filter(p => brokerIdOfProfile(p) === idOfBroker(broker)),
   }));
 }

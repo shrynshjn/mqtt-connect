@@ -8,7 +8,11 @@ import {
   View,
 } from 'react-native';
 import Share from 'react-native-share';
-import { writeFile, unlink, CachesDirectoryPath } from '@dr.pogodin/react-native-fs';
+import {
+  writeFile,
+  unlink,
+  CachesDirectoryPath,
+} from '@dr.pogodin/react-native-fs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../app/navigation';
 import { colors, font, radius, space } from '../../ui/theme';
@@ -181,9 +185,7 @@ export function ExportPickerScreen({ navigation }: Props) {
             <SelectableRow
               title={broker.name}
               subtitle={`${schemeFor(broker.transport)}://${broker.host}:${broker.port}`}
-              selected={
-                selectedBrokerIds.has(broker.id) || anyChildSelected
-              }
+              selected={selectedBrokerIds.has(broker.id) || anyChildSelected}
               disabled={anyChildSelected}
               onToggle={() => toggleBroker(broker.id)}
             />
@@ -215,9 +217,7 @@ export function ExportPickerScreen({ navigation }: Props) {
             {busy && (
               <ActivityIndicator size="small" color={colors.textTertiary} />
             )}
-            <Text
-              style={[styles.exportText, busy && styles.exportTextBusy]}
-            >
+            <Text style={[styles.exportText, busy && styles.exportTextBusy]}>
               {busy ? 'Encrypting…' : `Export ${selectedCount} selected`}
             </Text>
           </Pressable>

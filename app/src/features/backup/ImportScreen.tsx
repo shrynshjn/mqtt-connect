@@ -193,16 +193,15 @@ export function ImportScreen({ navigation }: Props) {
             keyExtractor={p => p.originalId}
             renderSectionHeader={({ section }) => {
               const broker = section.broker as ExportedBroker;
-              const anyChildSelected = section.data.some(
-                (p: ExportedProfile) => selectedProfileIds.has(p.originalId),
+              const anyChildSelected = section.data.some((p: ExportedProfile) =>
+                selectedProfileIds.has(p.originalId),
               );
               return (
                 <SelectableRow
                   title={broker.name}
                   subtitle={`${broker.host}:${broker.port}`}
                   selected={
-                    selectedBrokerIds.has(broker.originalId) ||
-                    anyChildSelected
+                    selectedBrokerIds.has(broker.originalId) || anyChildSelected
                   }
                   disabled={anyChildSelected}
                   onToggle={() => toggleBroker(broker.originalId)}
@@ -228,10 +227,7 @@ export function ImportScreen({ navigation }: Props) {
                 onPress={onImportPressed}
               >
                 {busy && (
-                  <ActivityIndicator
-                    size="small"
-                    color={colors.textTertiary}
-                  />
+                  <ActivityIndicator size="small" color={colors.textTertiary} />
                 )}
                 <Text
                   style={[styles.importText, busy && styles.importTextBusy]}

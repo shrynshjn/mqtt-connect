@@ -30,9 +30,9 @@ interface BackupEnvelope {
 export class BackupDecryptError extends Error {}
 
 function randomForgeBytes(count: number): string {
-  return forge.util.createBuffer(
-    crypto.getRandomValues(new Uint8Array(count)),
-  ).getBytes();
+  return forge.util
+    .createBuffer(crypto.getRandomValues(new Uint8Array(count)))
+    .getBytes();
 }
 
 function deriveKey(password: string, saltForgeBytes: string): string {

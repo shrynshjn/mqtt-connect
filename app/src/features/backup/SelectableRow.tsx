@@ -67,7 +67,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
-  checkmark: { color: colors.bg, fontSize: 13, fontWeight: '700', lineHeight: 14 },
+  checkmark: {
+    color: colors.bg,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 14,
+  },
   body: { flex: 1, gap: 2 },
   title: { fontSize: 14, fontWeight: '600', color: colors.text },
   subtitle: { fontFamily: font.mono, fontSize: 11, color: colors.textTertiary },

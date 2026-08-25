@@ -115,7 +115,9 @@ function exportBroker(broker: Broker): ExportedBroker {
 /** Returns `undefined` if the profile can't be fully resolved (missing broker, or a
  * secret ref that's evaporated from storage independently of the profile) — such a
  * profile isn't worth backing up, since it couldn't reconnect anyway. */
-function exportProfile(profile: ConnectionProfile): ExportedProfile | undefined {
+function exportProfile(
+  profile: ConnectionProfile,
+): ExportedProfile | undefined {
   const broker = getBroker(profile.brokerId);
   if (!broker) return undefined;
 
@@ -269,9 +271,7 @@ export function applyImportPayload(
 
     let auth: ConnectionProfile['auth'];
     if (exported.auth) {
-      const passwordRef = exported.auth.password
-        ? newSecretId()
-        : undefined;
+      const passwordRef = exported.auth.password ? newSecretId() : undefined;
       if (passwordRef && exported.auth.password != null) {
         setSecret(passwordRef, exported.auth.password);
       }
