@@ -295,8 +295,8 @@ export class ManagedConnection {
 
     if (opts.persist !== false) {
       moveToActive(this.profile.id, filter, qos);
-      recordTopicUsage(this.profile.id, filter, 'subscribe');
     }
+    recordTopicUsage(this.profile.id, filter, 'subscribe');
     return { ok: true };
   }
 

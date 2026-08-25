@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, font, space } from '../../ui/theme';
 import { StatusDot } from '../../ui/StatusDot';
 import { formatUptime } from '../../ui/format';
@@ -22,12 +22,20 @@ export function WorkspaceHeader({
 }) {
   const status = snapshot?.status ?? 'idle';
   const broker = getBroker(profile.brokerId);
+  const isBusy =
+    status === 'connecting' ||
+    status === 'reconnecting' ||
+    status === 'disconnecting';
   const actionLabel =
     status === 'connected'
       ? 'Disconnect'
-      : status === 'error'
-        ? 'Retry'
-        : 'Connect';
+      : status === 'connecting' || status === 'reconnecting'
+        ? 'Connecting…'
+        : status === 'disconnecting'
+          ? 'Disconnecting…'
+          : status === 'error'
+            ? 'Retry'
+            : 'Connect';
 
   return (
     <View style={styles.wrap}>
@@ -51,8 +59,17 @@ export function WorkspaceHeader({
         <Pressable onPress={onEditCert} hitSlop={8} style={styles.editBtn}>
           <Text style={styles.editIcon}>⋯</Text>
         </Pressable>
-        <Pressable onPress={onToggleConnect} style={styles.actionBtn}>
-          <Text style={styles.actionText}>{actionLabel}</Text>
+        <Pressable
+          onPress={onToggleConnect}
+          disabled={isBusy}
+          style={[styles.actionBtn, isBusy && styles.actionBtnBusy]}
+        >
+          {isBusy && (
+            <ActivityIndicator size="small" color={colors.textTertiary} />
+          )}
+          <Text style={[styles.actionText, isBusy && styles.actionTextBusy]}>
+            {actionLabel}
+          </Text>
         </Pressable>
       </View>
 
@@ -105,13 +122,18 @@ const styles = StyleSheet.create({
   editBtn: { paddingHorizontal: 6, paddingVertical: 4 },
   editIcon: { fontSize: 17, color: colors.textTertiary, fontWeight: '700' },
   actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     borderColor: colors.hairline,
     borderWidth: 1,
     borderRadius: 9,
     paddingVertical: 6,
     paddingHorizontal: 11,
   },
+  actionBtnBusy: { opacity: 0.6 },
   actionText: { fontSize: 12, fontWeight: '600', color: colors.accent },
+  actionTextBusy: { color: colors.textTertiary },
   statusLine: {
     fontFamily: font.mono,
     fontSize: 10.5,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, font, radius, space } from '../../ui/theme';
 import { StatusDot, statusKind } from '../../ui/StatusDot';
 import { formatUptime, formatRelative } from '../../ui/format';
@@ -49,12 +49,20 @@ export function ConnectionCard({
               : 'never connected',
           ];
 
+  const isBusy =
+    status === 'connecting' ||
+    status === 'reconnecting' ||
+    status === 'disconnecting';
   const actionLabel =
     status === 'connected'
       ? 'Disconnect'
-      : status === 'error'
-        ? 'Retry'
-        : 'Connect';
+      : status === 'connecting' || status === 'reconnecting'
+        ? 'Connecting…'
+        : status === 'disconnecting'
+          ? 'Disconnecting…'
+          : status === 'error'
+            ? 'Retry'
+            : 'Connect';
 
   return (
     <Pressable
@@ -91,13 +99,18 @@ export function ConnectionCard({
         <View style={{ flex: 1 }} />
         <Pressable
           onPress={onToggleConnect}
-          style={styles.actionBtn}
+          disabled={isBusy}
+          style={[styles.actionBtn, isBusy && styles.actionBtnBusy]}
           hitSlop={8}
         >
+          {isBusy && (
+            <ActivityIndicator size="small" color={colors.textTertiary} />
+          )}
           <Text
             style={[
               styles.actionText,
               kind === 'fault' && { color: colors.fault },
+              isBusy && styles.actionTextBusy,
             ]}
           >
             {actionLabel}
@@ -155,13 +168,18 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   stat: { fontFamily: font.mono, fontSize: 10.5, color: colors.textSecondary },
   actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: radius.sm,
     borderColor: colors.hairline,
     borderWidth: 1,
   },
+  actionBtnBusy: { opacity: 0.6 },
   actionText: { fontSize: 12.5, fontWeight: '600', color: colors.accent },
+  actionTextBusy: { color: colors.textTertiary },
   faultBanner: {
     backgroundColor: colors.faultDim,
     borderColor: colors.faultBorder,
