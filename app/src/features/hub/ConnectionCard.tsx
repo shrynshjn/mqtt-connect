@@ -1,5 +1,11 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { colors, font, radius, space } from '../../ui/theme';
 import { StatusDot, statusKind } from '../../ui/StatusDot';
 import { formatUptime, formatRelative } from '../../ui/format';
