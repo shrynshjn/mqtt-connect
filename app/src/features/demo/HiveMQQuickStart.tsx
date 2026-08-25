@@ -8,6 +8,7 @@ import { useToast } from '../../ui/Toast';
 import { showPrompt } from '../../ui/PromptModal';
 import {
   DEMO_VARIANTS,
+  HIVEMQ_TLS_CA_PEM,
   buildQuickStartPlan,
   commitQuickStartPlan,
   type DemoVariant,
@@ -36,7 +37,7 @@ export function HiveMQQuickStart() {
 
   async function onConfirm(plan: QuickStartPlan) {
     let caPem: string | undefined;
-    if (plan.variant.requiresCa) {
+    if (plan.variant.requiresCa && !HIVEMQ_TLS_CA_PEM) {
       const pasted = await showPrompt(
         'HiveMQ CA certificate',
         "Paste the PEM certificate chain for broker.hivemq.com — needed once, since this app pins TLS connections to an explicit CA rather than trusting the device's certificate store.",
@@ -109,7 +110,7 @@ export function HiveMQQuickStart() {
                   reconnects it.
                 </Text>
               )}
-              {step.plan.variant.requiresCa && (
+              {step.plan.variant.requiresCa && !HIVEMQ_TLS_CA_PEM && (
                 <Text style={styles.hint}>
                   This one is TLS-encrypted — you'll be asked to paste the
                   broker's CA certificate next.
