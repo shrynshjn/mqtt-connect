@@ -74,6 +74,7 @@ export class ManagedConnection {
   private snapshot: ConnectionSnapshot;
   private messages: MqttMessage[];
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
+  private connectWatchdog: ReturnType<typeof setTimeout> | null = null;
   private snapshotListeners = new Set<SnapshotListener>();
   private messagesListeners = new Set<MessagesListener>();
 
@@ -127,6 +128,46 @@ export class ManagedConnection {
     this.snapshotListeners.forEach(l => l(this.snapshot));
   }
 
+  // react-native-tcp-socket's Android connect() only bounds the TCP handshake step with
+  // `connectTimeoutMs` — DNS resolution (`InetAddress.getByName`, called first) and, for
+  // TLS, the handshake that follows a successful TCP connect are both native calls with
+  // no timeout of their own, so either one hanging leaves the attempt stuck on
+  // "connecting" forever with no 'error' ever reaching JS. This JS-side watchdog is the
+  // backstop: armed for each attempt (initial connect, and every 'reconnect'), it forces
+  // the attempt to a clear error state if nothing resolves it in time, regardless of
+  // which native phase actually stalled.
+  private armConnectWatchdog(): void {
+    this.clearConnectWatchdog();
+    this.connectWatchdog = setTimeout(() => {
+      this.connectWatchdog = null;
+      if (
+        this.snapshot.status !== 'connecting' &&
+        this.snapshot.status !== 'reconnecting'
+      )
+        return;
+      const seconds = Math.round(this.profile.connectTimeoutMs / 1000);
+      this.setSnapshot({
+        status: 'error',
+        statusSince: Date.now(),
+        lastError: {
+          category: 'timeout',
+          message: `No response after ${seconds}s`,
+          hint: "The broker may be unreachable, or a step before/after the TCP handshake (DNS lookup, TLS handshake) stalled without the socket ever reporting an error of its own — check the host, port, and that the broker is reachable from this network.",
+          at: Date.now(),
+        },
+      });
+      this.client?.end(true);
+      this.client = null;
+    }, this.profile.connectTimeoutMs);
+  }
+
+  private clearConnectWatchdog(): void {
+    if (this.connectWatchdog) {
+      clearTimeout(this.connectWatchdog);
+      this.connectWatchdog = null;
+    }
+  }
+
   connect(): void {
     if (this.client) return;
     this.setSnapshot({
@@ -177,8 +218,10 @@ export class ManagedConnection {
       return;
     }
     this.client = client;
+    this.armConnectWatchdog();
 
     client.on('connect', (connack: IConnackPacket) => {
+      this.clearConnectWatchdog();
       this.setSnapshot({
         status: 'connected',
         statusSince: Date.now(),
@@ -194,6 +237,7 @@ export class ManagedConnection {
     });
 
     client.on('reconnect', () => {
+      this.armConnectWatchdog();
       this.setSnapshot({
         status: 'reconnecting',
         statusSince: Date.now(),
@@ -216,6 +260,7 @@ export class ManagedConnection {
     });
 
     client.on('error', err => {
+      this.clearConnectWatchdog();
       this.setSnapshot({
         status: 'error',
         statusSince: Date.now(),
@@ -236,6 +281,7 @@ export class ManagedConnection {
   }
 
   disconnect(): void {
+    this.clearConnectWatchdog();
     this.setSnapshot({ status: 'disconnecting', statusSince: Date.now() });
     this.client?.end(true);
     this.client = null;
@@ -243,6 +289,7 @@ export class ManagedConnection {
   }
 
   destroy(): void {
+    this.clearConnectWatchdog();
     this.client?.end(true);
     this.client = null;
     this.snapshotListeners.clear();
