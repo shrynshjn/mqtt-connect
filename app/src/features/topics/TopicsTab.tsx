@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { colors, font, radius, space } from '../../ui/theme';
+import { KeyboardAvoidingScreen } from '../../ui/KeyboardAvoidingScreen';
 import { useToast } from '../../ui/Toast';
 import { stripSmartPunctuation } from '../../ui/sanitizeText';
 import {
@@ -60,80 +61,88 @@ export function TopicsTab({ profileId }: { profileId: ProfileId }) {
   }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionLabel}>Active subscriptions</Text>
-      {active.length === 0 && (
-        <Text style={styles.emptyHint}>No active subscriptions yet.</Text>
-      )}
-      {active.map(s => (
-        <ActiveSubscriptionRow
-          key={s.filter}
-          topic={s.filter}
-          qos={s.requestedQos}
-          count={s.messageCount}
-          onUnsub={() => {
-            unsubscribeTopic(profileId, s.filter);
-            refreshSaved();
-          }}
-        />
-      ))}
-
-      <Text style={styles.sectionLabel}>Saved for this broker</Text>
-      {savedTopics.map(s => (
-        <SavedTopicRow
-          key={s.topic}
-          topic={s.topic}
-          lastUsedAt={s.lastUsedAt}
-          onSubscribe={() => {
-            const result = subscribeTopic(profileId, s.topic, 0);
-            if (!result.ok) show(`subscribe failed · ${result.error}`);
-            refreshSaved();
-          }}
-        />
-      ))}
-
-      {adding ? (
-        <View style={styles.addBox}>
-          <Text style={styles.sectionLabel}>New subscription</Text>
-          <TextInput
-            value={draft}
-            onChangeText={v => setDraft(stripSmartPunctuation(v))}
-            placeholder="factory/line-2/#"
-            placeholderTextColor={colors.textTertiary}
-            autoCapitalize="none"
-            autoCorrect={false}
-            spellCheck={false}
-            style={styles.input}
-            autoFocus
+    <KeyboardAvoidingScreen style={styles.root}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.sectionLabel}>Active subscriptions</Text>
+        {active.length === 0 && (
+          <Text style={styles.emptyHint}>No active subscriptions yet.</Text>
+        )}
+        {active.map(s => (
+          <ActiveSubscriptionRow
+            key={s.filter}
+            topic={s.filter}
+            qos={s.requestedQos}
+            count={s.messageCount}
+            onUnsub={() => {
+              unsubscribeTopic(profileId, s.filter);
+              refreshSaved();
+            }}
           />
-          <TopicSuggestionChips suggestions={suggestions} onPick={setDraft} />
-          <View style={styles.qosRow}>
-            <Text style={styles.qosLabel}>QoS</Text>
-            <SegmentedControl
-              options={[
-                { value: 0, label: '0' },
-                { value: 1, label: '1' },
-                { value: 2, label: '2' },
-              ]}
-              value={qos}
-              onChange={setQos}
+        ))}
+
+        <Text style={styles.sectionLabel}>Saved for this broker</Text>
+        {savedTopics.map(s => (
+          <SavedTopicRow
+            key={s.topic}
+            topic={s.topic}
+            lastUsedAt={s.lastUsedAt}
+            onSubscribe={() => {
+              const result = subscribeTopic(profileId, s.topic, 0);
+              if (!result.ok) show(`subscribe failed · ${result.error}`);
+              refreshSaved();
+            }}
+          />
+        ))}
+
+        {adding ? (
+          <View style={styles.addBox}>
+            <Text style={styles.sectionLabel}>New subscription</Text>
+            <TextInput
+              value={draft}
+              onChangeText={v => setDraft(stripSmartPunctuation(v))}
+              placeholder="factory/line-2/#"
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              spellCheck={false}
+              style={styles.input}
+              autoFocus
             />
+            <TopicSuggestionChips suggestions={suggestions} onPick={setDraft} />
+            <View style={styles.qosRow}>
+              <Text style={styles.qosLabel}>QoS</Text>
+              <SegmentedControl
+                options={[
+                  { value: 0, label: '0' },
+                  { value: 1, label: '1' },
+                  { value: 2, label: '2' },
+                ]}
+                value={qos}
+                onChange={setQos}
+              />
+            </View>
+            <View style={styles.actions}>
+              <Pressable style={styles.primaryBtn} onPress={commit}>
+                <Text style={styles.primaryText}>Subscribe</Text>
+              </Pressable>
+              <Pressable
+                style={styles.ghostBtn}
+                onPress={() => setAdding(false)}
+              >
+                <Text style={styles.ghostText}>Cancel</Text>
+              </Pressable>
+            </View>
           </View>
-          <View style={styles.actions}>
-            <Pressable style={styles.primaryBtn} onPress={commit}>
-              <Text style={styles.primaryText}>Subscribe</Text>
-            </Pressable>
-            <Pressable style={styles.ghostBtn} onPress={() => setAdding(false)}>
-              <Text style={styles.ghostText}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      ) : (
-        <Pressable style={styles.newRow} onPress={() => setAdding(true)}>
-          <Text style={styles.newRowText}>New subscription</Text>
-        </Pressable>
-      )}
-    </ScrollView>
+        ) : (
+          <Pressable style={styles.newRow} onPress={() => setAdding(true)}>
+            <Text style={styles.newRowText}>New subscription</Text>
+          </Pressable>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingScreen>
   );
 }
 

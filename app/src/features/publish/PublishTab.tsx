@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { colors, font, radius, space } from '../../ui/theme';
+import { KeyboardAvoidingScreen } from '../../ui/KeyboardAvoidingScreen';
 import { useConnectionsStore } from '../../state/connectionsStore';
 import { useToast } from '../../ui/Toast';
 import { SegmentedControl } from '../../ui/SegmentedControl';
@@ -104,95 +105,100 @@ export function PublishTab({
   }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <View style={styles.section}>
-        <Text style={styles.label}>Topic</Text>
-        <TextInput
-          value={topic}
-          onChangeText={v => setTopic(stripSmartPunctuation(v))}
-          placeholder="factory/line-2/…"
-          placeholderTextColor={colors.textTertiary}
-          autoCapitalize="none"
-          autoCorrect={false}
-          spellCheck={false}
-          style={styles.topicInput}
-        />
-        <TopicSuggestionChips suggestions={suggestions} onPick={setTopic} />
-      </View>
-
-      <View style={styles.section}>
-        <View style={styles.payloadHeader}>
-          <Text style={styles.label}>Payload</Text>
-          <SegmentedControl
-            options={[
-              { value: 'JSON', label: 'JSON' },
-              { value: 'Text', label: 'Text' },
-              { value: 'Base64', label: 'Base64' },
-            ]}
-            value={format}
-            onChange={setFormat}
-          />
-        </View>
-
-        {format === 'JSON' && (
-          <SegmentedControl
-            options={[
-              { value: 'text', label: 'Text editor' },
-              { value: 'keyvalue', label: 'Key-value' },
-            ]}
-            value={jsonEditor}
-            onChange={v =>
-              v === 'keyvalue' ? switchToKeyValue() : setJsonEditor('text')
-            }
-          />
-        )}
-
-        {format === 'JSON' && jsonEditor === 'keyvalue' ? (
-          <KeyValueEditor rows={rows} onChange={updateRows} />
-        ) : (
+    <KeyboardAvoidingScreen style={styles.root}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.section}>
+          <Text style={styles.label}>Topic</Text>
           <TextInput
-            value={payload}
-            onChangeText={v => setPayload(stripSmartPunctuation(v))}
-            multiline
-            numberOfLines={6}
-            style={styles.payloadInput}
-            placeholder=""
+            value={topic}
+            onChangeText={v => setTopic(stripSmartPunctuation(v))}
+            placeholder="factory/line-2/…"
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="none"
             autoCorrect={false}
             spellCheck={false}
+            style={styles.topicInput}
           />
-        )}
-      </View>
+          <TopicSuggestionChips suggestions={suggestions} onPick={setTopic} />
+        </View>
 
-      <View style={styles.qosRetainRow}>
-        <Text style={styles.label}>QoS</Text>
-        <SegmentedControl
-          options={[
-            { value: 0, label: '0' },
-            { value: 1, label: '1' },
-            { value: 2, label: '2' },
-          ]}
-          value={qos}
-          onChange={setQos}
-        />
-        <View style={{ flex: 1 }} />
-        <Text style={styles.retainLabel}>Retain</Text>
-        <ToggleSwitch value={retain} onChange={setRetain} />
-      </View>
+        <View style={styles.section}>
+          <View style={styles.payloadHeader}>
+            <Text style={styles.label}>Payload</Text>
+            <SegmentedControl
+              options={[
+                { value: 'JSON', label: 'JSON' },
+                { value: 'Text', label: 'Text' },
+                { value: 'Base64', label: 'Base64' },
+              ]}
+              value={format}
+              onChange={setFormat}
+            />
+          </View>
 
-      <View style={styles.actions}>
-        <Pressable style={styles.publishBtn} onPress={doPublish}>
-          <Text style={styles.publishText}>Publish</Text>
-        </Pressable>
-        <Pressable style={styles.pinBtn} onPress={pin}>
-          <Text style={styles.pinText}>Pin</Text>
-        </Pressable>
-      </View>
-      <Text style={styles.hint}>
-        Pinned messages appear at the top of the feed and send in one tap.
-      </Text>
-    </ScrollView>
+          {format === 'JSON' && (
+            <SegmentedControl
+              options={[
+                { value: 'text', label: 'Text editor' },
+                { value: 'keyvalue', label: 'Key-value' },
+              ]}
+              value={jsonEditor}
+              onChange={v =>
+                v === 'keyvalue' ? switchToKeyValue() : setJsonEditor('text')
+              }
+            />
+          )}
+
+          {format === 'JSON' && jsonEditor === 'keyvalue' ? (
+            <KeyValueEditor rows={rows} onChange={updateRows} />
+          ) : (
+            <TextInput
+              value={payload}
+              onChangeText={v => setPayload(stripSmartPunctuation(v))}
+              multiline
+              numberOfLines={6}
+              style={styles.payloadInput}
+              placeholder=""
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              spellCheck={false}
+            />
+          )}
+        </View>
+
+        <View style={styles.qosRetainRow}>
+          <Text style={styles.label}>QoS</Text>
+          <SegmentedControl
+            options={[
+              { value: 0, label: '0' },
+              { value: 1, label: '1' },
+              { value: 2, label: '2' },
+            ]}
+            value={qos}
+            onChange={setQos}
+          />
+          <View style={{ flex: 1 }} />
+          <Text style={styles.retainLabel}>Retain</Text>
+          <ToggleSwitch value={retain} onChange={setRetain} />
+        </View>
+
+        <View style={styles.actions}>
+          <Pressable style={styles.publishBtn} onPress={doPublish}>
+            <Text style={styles.publishText}>Publish</Text>
+          </Pressable>
+          <Pressable style={styles.pinBtn} onPress={pin}>
+            <Text style={styles.pinText}>Pin</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.hint}>
+          Pinned messages appear at the top of the feed and send in one tap.
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingScreen>
   );
 }
 
