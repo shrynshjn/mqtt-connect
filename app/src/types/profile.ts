@@ -81,8 +81,14 @@ export interface ConnectionProfile {
   lastConnectedAt?: string;
 }
 
+// Only 'tls' connects over a raw socket this app TLS-wraps itself (react-native-tcp-socket),
+// which is why it's the only transport that needs (and accepts) an explicit pinned CA
+// certificate here. 'wss' also encrypts, but it goes over the platform's real WebSocket
+// implementation, which validates against the OS trust store the same way a browser or
+// `fetch()` call would — there's no way to hand it a custom CA, and no need to for an
+// ordinary publicly-trusted broker certificate.
 export function isTlsTransport(transport: Transport): boolean {
-  return transport === 'tls' || transport === 'wss';
+  return transport === 'tls';
 }
 
 export function defaultPortFor(transport: Transport): number {

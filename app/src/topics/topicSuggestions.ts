@@ -4,7 +4,6 @@ import type { TopicUsage, TopicUsageKind } from '../types/topics';
 
 const HALF_LIFE_MS = 7 * 24 * 60 * 60 * 1000;
 const PER_PROFILE_CAP = 300;
-const GLOBAL_CAP = 800;
 const WEIGHTS: Record<TopicUsageKind, number> = {
   subscribe: 1.0,
   publish: 1.0,
@@ -14,7 +13,6 @@ const WEIGHTS: Record<TopicUsageKind, number> = {
 function key(profileId: ProfileId): string {
   return `topics:usage:${profileId}`;
 }
-const GLOBAL_KEY = 'topics:usage:__global__';
 
 function read(k: string): TopicUsage[] {
   const raw = getMetaKv().getString(k);
@@ -30,13 +28,13 @@ function decayedScore(entry: TopicUsage, now: number): number {
   return entry.score * Math.pow(0.5, elapsed / HALF_LIFE_MS);
 }
 
-function record(
-  k: string,
-  cap: number,
+export function recordTopicUsage(
+  profileId: ProfileId,
   topic: string,
   kind: TopicUsageKind,
-  now: number,
 ): void {
+  const now = Date.now();
+  const k = key(profileId);
   const entries = read(k);
   const idx = entries.findIndex(e => e.topic === topic);
   const weight = WEIGHTS[kind];
@@ -56,17 +54,7 @@ function record(
     if (!e.kinds.includes(kind)) e.kinds.push(kind);
   }
   entries.sort((a, b) => decayedScore(b, now) - decayedScore(a, now));
-  write(k, entries.slice(0, cap));
-}
-
-export function recordTopicUsage(
-  profileId: ProfileId,
-  topic: string,
-  kind: TopicUsageKind,
-): void {
-  const now = Date.now();
-  record(key(profileId), PER_PROFILE_CAP, topic, kind, now);
-  record(GLOBAL_KEY, GLOBAL_CAP, topic, kind, now);
+  write(k, entries.slice(0, PER_PROFILE_CAP));
 }
 
 export function removeTopicUsage(profileId: ProfileId, topic: string): void {
@@ -80,8 +68,9 @@ export function clearTopicHistory(profileId: ProfileId): void {
   write(key(profileId), []);
 }
 
-// Per-profile results first (broker-specific namespaces), global results as a lower-weighted
-// top-up, per the plan's scoping decision. Prefix/substring match on the query.
+// Scoped to this profile only — a topic used on another client shouldn't surface here,
+// since different clients often connect to entirely different brokers. Prefix/substring
+// match on the query.
 export function suggestTopics(
   profileId: ProfileId,
   query: string,
@@ -89,23 +78,11 @@ export function suggestTopics(
 ): string[] {
   const now = Date.now();
   const q = query.trim().toLowerCase();
-  const local = read(key(profileId)).map(e => ({
-    topic: e.topic,
-    score: decayedScore(e, now),
-  }));
-  const global = read(GLOBAL_KEY).map(e => ({
-    topic: e.topic,
-    score: decayedScore(e, now) * 0.3,
-  }));
 
-  const merged = new Map<string, number>();
-  for (const { topic, score } of [...local, ...global]) {
-    merged.set(topic, Math.max(merged.get(topic) ?? 0, score));
-  }
-
-  return Array.from(merged.entries())
-    .filter(([topic]) => !q || topic.toLowerCase().includes(q))
-    .sort((a, b) => b[1] - a[1])
+  return read(key(profileId))
+    .map(e => ({ topic: e.topic, score: decayedScore(e, now) }))
+    .filter(({ topic }) => !q || topic.toLowerCase().includes(q))
+    .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map(([topic]) => topic);
+    .map(({ topic }) => topic);
 }

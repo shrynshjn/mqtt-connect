@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -59,34 +61,42 @@ export function PromptModalHost() {
       animationType="fade"
       onRequestClose={() => close(null)}
     >
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{state.title}</Text>
-          {state.message && <Text style={styles.message}>{state.message}</Text>}
-          <TextInput
-            value={value}
-            onChangeText={setValue}
-            secureTextEntry={state.secure}
-            multiline={state.multiline}
-            autoFocus
-            style={[styles.input, state.multiline && styles.inputMultiline]}
-            placeholderTextColor={colors.textTertiary}
-          />
-          <View style={styles.actions}>
-            <Pressable style={styles.cancelBtn} onPress={() => close(null)}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
-            <Pressable style={styles.okBtn} onPress={() => close(value)}>
-              <Text style={styles.okText}>OK</Text>
-            </Pressable>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.backdrop}>
+          <View style={styles.card}>
+            <Text style={styles.title}>{state.title}</Text>
+            {state.message && (
+              <Text style={styles.message}>{state.message}</Text>
+            )}
+            <TextInput
+              value={value}
+              onChangeText={setValue}
+              secureTextEntry={state.secure}
+              multiline={state.multiline}
+              autoFocus
+              style={[styles.input, state.multiline && styles.inputMultiline]}
+              placeholderTextColor={colors.textTertiary}
+            />
+            <View style={styles.actions}>
+              <Pressable style={styles.cancelBtn} onPress={() => close(null)}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.okBtn} onPress={() => close(value)}>
+                <Text style={styles.okText}>OK</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(4,7,13,0.6)',

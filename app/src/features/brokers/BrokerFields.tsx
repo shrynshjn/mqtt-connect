@@ -10,7 +10,11 @@ export interface BrokerDraft {
   host: string;
   port: string;
   transport: Transport;
+  // WebSocket URL path — only shown/used for 'ws'/'wss'.
+  path: string;
 }
+
+const DEFAULT_WS_PATH = '/mqtt';
 
 /** Shared Name/Host/Port/Protocol fields — used by both the full broker form and the
  * inline "new broker" mode inside the picker, so the two never drift apart. */
@@ -21,14 +25,18 @@ export function BrokerFields({
   draft: BrokerDraft;
   onChange: (draft: BrokerDraft) => void;
 }) {
+  const isWs = draft.transport === 'ws' || draft.transport === 'wss';
+
   function onTransportChange(next: Transport) {
     const wasDefaultPort =
       draft.port === '' ||
       draft.port === String(defaultPortFor(draft.transport));
+    const nextIsWs = next === 'ws' || next === 'wss';
     onChange({
       ...draft,
       transport: next,
       port: wasDefaultPort ? String(defaultPortFor(next)) : draft.port,
+      path: nextIsWs && !draft.path ? DEFAULT_WS_PATH : draft.path,
     });
   }
 
@@ -62,7 +70,7 @@ export function BrokerFields({
             style={[styles.input, styles.mono]}
           />
         </View>
-        <View style={[styles.row, styles.rowLast]}>
+        <View style={[styles.row, isWs && styles.rowLast]}>
           <Text style={styles.label}>Port</Text>
           <TextInput
             value={draft.port}
@@ -71,6 +79,23 @@ export function BrokerFields({
             style={[styles.input, styles.mono]}
           />
         </View>
+        {isWs && (
+          <View style={[styles.row, styles.rowLast]}>
+            <Text style={styles.label}>Path</Text>
+            <TextInput
+              value={draft.path}
+              onChangeText={v =>
+                onChange({ ...draft, path: stripSmartPunctuation(v) })
+              }
+              placeholder={DEFAULT_WS_PATH}
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              spellCheck={false}
+              style={[styles.input, styles.mono]}
+            />
+          </View>
+        )}
       </View>
       <SegmentedControl
         options={[

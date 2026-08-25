@@ -8,10 +8,14 @@ import {
 import { isTlsTransport, type ConnectionProfile } from '../types/profile';
 import type { TcpConnectOptions } from './transport/types';
 
-export interface ConnectionInputs {
-  tcp: TcpConnectOptions;
-  client: IClientOptions;
-}
+// Discriminated on which stream mqtt.js should use. 'tcp'/'tls' brokers connect over a
+// raw socket this app builds and TLS-wraps itself (react-native-tcp-socket) — the only
+// path that supports a pinned CA and client certs. 'ws'/'wss' brokers connect over the
+// platform's real WebSocket implementation instead (see connection.ts), which mqtt.js
+// drives directly from a URL and needs no socket options of its own.
+export type ConnectionInputs =
+  | { kind: 'socket'; tcp: TcpConnectOptions; client: IClientOptions }
+  | { kind: 'ws'; url: string; client: IClientOptions };
 
 /**
  * Resolves a profile's secret refs (password, CA/cert/key PEMs, key passphrase) out of
@@ -30,6 +34,35 @@ export function buildConnectionInputs(
     );
   }
 
+  const client: IClientOptions = {
+    clientId: profile.clientId,
+    protocolVersion: profile.protocolVersion,
+    clean: profile.cleanStart,
+    keepalive: profile.keepaliveSeconds,
+    connectTimeout: profile.connectTimeoutMs,
+    reconnectPeriod: profile.reconnectPeriodMs,
+    // A bad password should surface as an auth error, not an infinite reconnect loop.
+    reconnectOnConnackError: false,
+    username: profile.auth?.username,
+    password: profile.auth?.passwordRef
+      ? getSecret(profile.auth.passwordRef)
+      : undefined,
+    will: profile.lastWill
+      ? {
+          topic: profile.lastWill.topic,
+          payload: profile.lastWill.payload,
+          qos: profile.lastWill.qos,
+          retain: profile.lastWill.retain,
+        }
+      : undefined,
+  };
+
+  if (broker.transport === 'ws' || broker.transport === 'wss') {
+    const path = broker.path && broker.path.length > 0 ? broker.path : '/';
+    const url = `${broker.transport}://${broker.host}:${broker.port}${path}`;
+    return { kind: 'ws', url, client };
+  }
+
   const tcp: TcpConnectOptions = {
     host: broker.host,
     port: broker.port,
@@ -42,7 +75,7 @@ export function buildConnectionInputs(
     );
   }
 
-  if (profile.tls) {
+  if (isTlsTransport(broker.transport) && profile.tls) {
     const ca = getSecret(profile.tls.caRef);
     if (!ca)
       throw new Error(
@@ -76,28 +109,5 @@ export function buildConnectionInputs(
     tcp.tls = { ca, cert, key, certAlias, keyAlias };
   }
 
-  const client: IClientOptions = {
-    clientId: profile.clientId,
-    protocolVersion: profile.protocolVersion,
-    clean: profile.cleanStart,
-    keepalive: profile.keepaliveSeconds,
-    connectTimeout: profile.connectTimeoutMs,
-    reconnectPeriod: profile.reconnectPeriodMs,
-    // A bad password should surface as an auth error, not an infinite reconnect loop.
-    reconnectOnConnackError: false,
-    username: profile.auth?.username,
-    password: profile.auth?.passwordRef
-      ? getSecret(profile.auth.passwordRef)
-      : undefined,
-    will: profile.lastWill
-      ? {
-          topic: profile.lastWill.topic,
-          payload: profile.lastWill.payload,
-          qos: profile.lastWill.qos,
-          retain: profile.lastWill.retain,
-        }
-      : undefined,
-  };
-
-  return { tcp, client };
+  return { kind: 'socket', tcp, client };
 }

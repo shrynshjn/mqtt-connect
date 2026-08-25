@@ -22,6 +22,7 @@ import { unwrapPkcs12 } from '../../crypto/pkcs12';
 import { splitAndClassifyPem } from '../../crypto/pem';
 import { pickAndReadFile } from '../../crypto/filePicker';
 import { showPrompt } from '../../ui/PromptModal';
+import { KeyboardAvoidingScreen } from '../../ui/KeyboardAvoidingScreen';
 import { CertSlotRow, type CertSlotValue } from './CertSlotRow';
 import { stripSmartPunctuation } from '../../ui/sanitizeText';
 import { getBroker } from '../../storage/brokerRepo';
@@ -380,221 +381,231 @@ export function ProfileFormScreen({ route, navigation }: Props) {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Client</Text>
-          <View style={styles.card}>
-            <FieldRow
-              label="Name"
-              value={name}
-              onChangeText={v => setName(stripSmartPunctuation(v))}
-            />
-            <View style={[styles.fieldRow, styles.fieldRowLast]}>
-              <Text style={styles.fieldLabel}>Client ID</Text>
-              <TextInput
-                value={clientId}
-                onChangeText={v => setClientId(stripSmartPunctuation(v))}
-                autoCapitalize="none"
-                autoCorrect={false}
-                spellCheck={false}
-                style={[
-                  styles.fieldInput,
-                  { fontFamily: font.mono, fontSize: 13 },
-                ]}
+      <KeyboardAvoidingScreen>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Client</Text>
+            <View style={styles.card}>
+              <FieldRow
+                label="Name"
+                value={name}
+                onChangeText={v => setName(stripSmartPunctuation(v))}
               />
-              <Pressable
-                onPress={() =>
-                  setClientId(
-                    `mqtt-connect-${Math.random().toString(16).slice(2, 8)}`,
-                  )
-                }
-              >
-                <Text style={styles.showHide}>New</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Broker</Text>
-          <Pressable style={styles.card} onPress={() => setPickerOpen(true)}>
-            <View style={[styles.fieldRow, styles.fieldRowLast]}>
-              {broker ? (
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.brokerName}>{broker.name}</Text>
-                  <Text style={styles.brokerHost}>
-                    {schemeFor(broker.transport)}://{broker.host}:{broker.port}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.brokerPlaceholder}>Choose a broker</Text>
-              )}
-              <Text style={styles.chevron}>›</Text>
-            </View>
-          </Pressable>
-          <Text style={styles.hint}>
-            A broker is saved separately so multiple clients can share the same
-            one — pick an existing broker or add a new one here.
-          </Text>
-        </View>
-
-        <BrokerPickerModal
-          visible={pickerOpen}
-          onSelect={onBrokerSelected}
-          onClose={() => setPickerOpen(false)}
-        />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Authentication</Text>
-          <View style={styles.card}>
-            <FieldRow
-              label="Username"
-              value={username}
-              onChangeText={setUsername}
-            />
-            <View style={[styles.fieldRow, styles.fieldRowLast]}>
-              <Text style={styles.fieldLabel}>Password</Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                style={[styles.fieldInput, { fontFamily: font.mono }]}
-              />
-              <Pressable onPress={() => setShowPassword(v => !v)}>
-                <Text style={styles.showHide}>
-                  {showPassword ? 'Hide' : 'Show'}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-
-          {isTls && (
-            <View style={styles.certCard}>
-              <View style={styles.certHeader}>
-                <Text style={styles.certTitle}>Client certificate (mTLS)</Text>
-                <ToggleSwitch value={certOn} onChange={setCertOn} />
+              <View style={[styles.fieldRow, styles.fieldRowLast]}>
+                <Text style={styles.fieldLabel}>Client ID</Text>
+                <TextInput
+                  value={clientId}
+                  onChangeText={v => setClientId(stripSmartPunctuation(v))}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  spellCheck={false}
+                  style={[
+                    styles.fieldInput,
+                    { fontFamily: font.mono, fontSize: 13 },
+                  ]}
+                />
+                <Pressable
+                  onPress={() =>
+                    setClientId(
+                      `mqtt-connect-${Math.random().toString(16).slice(2, 8)}`,
+                    )
+                  }
+                >
+                  <Text style={styles.showHide}>New</Text>
+                </Pressable>
               </View>
+            </View>
+          </View>
 
-              {certOn && (
-                <View style={{ gap: space.sm }}>
-                  <CertSlotRow
-                    label="CA certificate"
-                    hint="ca.pem"
-                    value={ca ? toSlotValue(ca.fileName, ca.meta) : null}
-                    onPick={pickCa}
-                    onClear={() => setCa(null)}
-                  />
-                  <CertSlotRow
-                    label="Client certificate"
-                    hint="client.crt"
-                    value={cert ? toSlotValue(cert.fileName, cert.meta) : null}
-                    onPick={pickCert}
-                    onClear={() => setCert(null)}
-                  />
-                  <CertSlotRow
-                    label="Client private key"
-                    hint="client.key"
-                    value={key ? toSlotValue(key.fileName) : null}
-                    onPick={pickKey}
-                    onClear={() => setKey(null)}
-                  />
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Broker</Text>
+            <Pressable style={styles.card} onPress={() => setPickerOpen(true)}>
+              <View style={[styles.fieldRow, styles.fieldRowLast]}>
+                {broker ? (
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.brokerName}>{broker.name}</Text>
+                    <Text style={styles.brokerHost}>
+                      {schemeFor(broker.transport)}://{broker.host}:
+                      {broker.port}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.brokerPlaceholder}>Choose a broker</Text>
+                )}
+                <Text style={styles.chevron}>›</Text>
+              </View>
+            </Pressable>
+            <Text style={styles.hint}>
+              A broker is saved separately so multiple clients can share the
+              same one — pick an existing broker or add a new one here.
+            </Text>
+          </View>
 
-                  {pendingPassphraseFile && (
-                    <View style={styles.passphraseBox}>
-                      <Text style={styles.passphraseLabel}>
-                        "{pendingPassphraseFile.fileName}" is encrypted
-                      </Text>
-                      <TextInput
-                        value={keyPassphrase}
-                        onChangeText={setKeyPassphrase}
-                        placeholder="Key passphrase"
-                        placeholderTextColor={colors.textTertiary}
-                        secureTextEntry
-                        style={styles.passphraseInput}
-                      />
-                      <Pressable
-                        style={styles.unlockBtn}
-                        onPress={() =>
-                          tryParseKey(
-                            pendingPassphraseFile.pem,
-                            pendingPassphraseFile.fileName,
-                            keyPassphrase,
-                          )
-                        }
-                      >
-                        <Text style={styles.unlockText}>Unlock</Text>
+          <BrokerPickerModal
+            visible={pickerOpen}
+            onSelect={onBrokerSelected}
+            onClose={() => setPickerOpen(false)}
+          />
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Authentication</Text>
+            <View style={styles.card}>
+              <FieldRow
+                label="Username"
+                value={username}
+                onChangeText={setUsername}
+              />
+              <View style={[styles.fieldRow, styles.fieldRowLast]}>
+                <Text style={styles.fieldLabel}>Password</Text>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  style={[styles.fieldInput, { fontFamily: font.mono }]}
+                />
+                <Pressable onPress={() => setShowPassword(v => !v)}>
+                  <Text style={styles.showHide}>
+                    {showPassword ? 'Hide' : 'Show'}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {isTls && (
+              <View style={styles.certCard}>
+                <View style={styles.certHeader}>
+                  <Text style={styles.certTitle}>
+                    Client certificate (mTLS)
+                  </Text>
+                  <ToggleSwitch value={certOn} onChange={setCertOn} />
+                </View>
+
+                {certOn && (
+                  <View style={{ gap: space.sm }}>
+                    <CertSlotRow
+                      label="CA certificate"
+                      hint="ca.pem"
+                      value={ca ? toSlotValue(ca.fileName, ca.meta) : null}
+                      onPick={pickCa}
+                      onClear={() => setCa(null)}
+                    />
+                    <CertSlotRow
+                      label="Client certificate"
+                      hint="client.crt"
+                      value={
+                        cert ? toSlotValue(cert.fileName, cert.meta) : null
+                      }
+                      onPick={pickCert}
+                      onClear={() => setCert(null)}
+                    />
+                    <CertSlotRow
+                      label="Client private key"
+                      hint="client.key"
+                      value={key ? toSlotValue(key.fileName) : null}
+                      onPick={pickKey}
+                      onClear={() => setKey(null)}
+                    />
+
+                    {pendingPassphraseFile && (
+                      <View style={styles.passphraseBox}>
+                        <Text style={styles.passphraseLabel}>
+                          "{pendingPassphraseFile.fileName}" is encrypted
+                        </Text>
+                        <TextInput
+                          value={keyPassphrase}
+                          onChangeText={setKeyPassphrase}
+                          placeholder="Key passphrase"
+                          placeholderTextColor={colors.textTertiary}
+                          secureTextEntry
+                          style={styles.passphraseInput}
+                        />
+                        <Pressable
+                          style={styles.unlockBtn}
+                          onPress={() =>
+                            tryParseKey(
+                              pendingPassphraseFile.pem,
+                              pendingPassphraseFile.fileName,
+                              keyPassphrase,
+                            )
+                          }
+                        >
+                          <Text style={styles.unlockText}>Unlock</Text>
+                        </Pressable>
+                      </View>
+                    )}
+
+                    <View style={styles.bulkRow}>
+                      <Pressable style={styles.bulkBtn} onPress={pickBundle}>
+                        <Text style={styles.bulkText}>Import .p12 bundle</Text>
+                      </Pressable>
+                      <Pressable style={styles.bulkBtn} onPress={pasteCert}>
+                        <Text style={styles.bulkText}>Paste PEM text</Text>
                       </Pressable>
                     </View>
-                  )}
-
-                  <View style={styles.bulkRow}>
-                    <Pressable style={styles.bulkBtn} onPress={pickBundle}>
-                      <Text style={styles.bulkText}>Import .p12 bundle</Text>
-                    </Pressable>
-                    <Pressable style={styles.bulkBtn} onPress={pasteCert}>
-                      <Text style={styles.bulkText}>Paste PEM text</Text>
-                    </Pressable>
+                    <Text style={styles.hint}>
+                      Files are read once through the system picker, then stored
+                      in the device keychain. They are never copied off the
+                      phone and are excluded from profile export.
+                    </Text>
                   </View>
-                  <Text style={styles.hint}>
-                    Files are read once through the system picker, then stored
-                    in the device keychain. They are never copied off the phone
-                    and are excluded from profile export.
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
+                )}
+              </View>
+            )}
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>MQTT options</Text>
-          <View style={styles.card}>
-            <View style={styles.fieldRow}>
-              <Text style={[styles.fieldLabel, { flex: 1 }]}>
-                Protocol version
-              </Text>
-              <SegmentedControl
-                options={[
-                  { value: 4, label: '3.1.1' },
-                  { value: 5, label: '5.0' },
-                ]}
-                value={protocolVersion}
-                onChange={setProtocolVersion}
-              />
-            </View>
-            <View style={styles.fieldRow}>
-              <Text style={[styles.fieldLabel, { flex: 1 }]}>Keep alive</Text>
-              <View style={styles.stepper}>
-                <Pressable
-                  onPress={() => setKeepalive(v => Math.max(15, v - 15))}
-                  style={styles.stepperBtn}
-                >
-                  <Text style={styles.stepperText}>−</Text>
-                </Pressable>
-                <Text style={styles.stepperValue}>{keepalive} s</Text>
-                <Pressable
-                  onPress={() => setKeepalive(v => Math.min(600, v + 15))}
-                  style={styles.stepperBtn}
-                >
-                  <Text style={styles.stepperText}>+</Text>
-                </Pressable>
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>MQTT options</Text>
+            <View style={styles.card}>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { flex: 1 }]}>
+                  Protocol version
+                </Text>
+                <SegmentedControl
+                  options={[
+                    { value: 4, label: '3.1.1' },
+                    { value: 5, label: '5.0' },
+                  ]}
+                  value={protocolVersion}
+                  onChange={setProtocolVersion}
+                />
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { flex: 1 }]}>Keep alive</Text>
+                <View style={styles.stepper}>
+                  <Pressable
+                    onPress={() => setKeepalive(v => Math.max(15, v - 15))}
+                    style={styles.stepperBtn}
+                  >
+                    <Text style={styles.stepperText}>−</Text>
+                  </Pressable>
+                  <Text style={styles.stepperValue}>{keepalive} s</Text>
+                  <Pressable
+                    onPress={() => setKeepalive(v => Math.min(600, v + 15))}
+                    style={styles.stepperBtn}
+                  >
+                    <Text style={styles.stepperText}>+</Text>
+                  </Pressable>
+                </View>
+              </View>
+              <View style={[styles.fieldRow, styles.fieldRowLast]}>
+                <Text style={[styles.fieldLabel, { flex: 1 }]}>
+                  Clean session
+                </Text>
+                <ToggleSwitch value={cleanStart} onChange={setCleanStart} />
               </View>
             </View>
-            <View style={[styles.fieldRow, styles.fieldRowLast]}>
-              <Text style={[styles.fieldLabel, { flex: 1 }]}>
-                Clean session
-              </Text>
-              <ToggleSwitch value={cleanStart} onChange={setCleanStart} />
-            </View>
           </View>
-        </View>
 
-        {existing && (
-          <Pressable style={styles.deleteBtn} onPress={onDelete}>
-            <Text style={styles.deleteText}>Delete client</Text>
-          </Pressable>
-        )}
-      </ScrollView>
+          {existing && (
+            <Pressable style={styles.deleteBtn} onPress={onDelete}>
+              <Text style={styles.deleteText}>Delete client</Text>
+            </Pressable>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingScreen>
     </View>
   );
 }

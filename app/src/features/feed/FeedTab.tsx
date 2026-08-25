@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { colors, font, space } from '../../ui/theme';
+import { KeyboardAvoidingScreen } from '../../ui/KeyboardAvoidingScreen';
 import { useMessages } from '../../state/useMessages';
 import { useConnectionsStore } from '../../state/connectionsStore';
 import { useToast } from '../../ui/Toast';
@@ -72,7 +73,7 @@ export function FeedTab({
   }
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingScreen style={styles.root}>
       <SnippetStrip
         snippets={snippets}
         onAdd={() => onEditMessage('', '')}
@@ -153,7 +154,7 @@ export function FeedTab({
           setDetailMessage(null);
         }}
       />
-    </View>
+    </KeyboardAvoidingScreen>
   );
 }
 

@@ -17,6 +17,7 @@ import {
   deleteBroker,
 } from '../../storage/brokerRepo';
 import { clientsUsingBroker } from '../../storage/profileRepo';
+import { KeyboardAvoidingScreen } from '../../ui/KeyboardAvoidingScreen';
 import { BrokerFields, type BrokerDraft } from './BrokerFields';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BrokerForm'>;
@@ -30,6 +31,7 @@ export function BrokerFormScreen({ route, navigation }: Props) {
     host: existing?.host ?? '',
     port: String(existing?.port ?? 8883),
     transport: existing?.transport ?? 'tls',
+    path: existing?.path ?? '',
   });
 
   function onSave() {
@@ -44,6 +46,10 @@ export function BrokerFormScreen({ route, navigation }: Props) {
       host: draft.host.trim(),
       port: Number(draft.port) || 8883,
       transport: draft.transport,
+      path:
+        draft.transport === 'ws' || draft.transport === 'wss'
+          ? draft.path.trim() || undefined
+          : undefined,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     });
@@ -91,15 +97,20 @@ export function BrokerFormScreen({ route, navigation }: Props) {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <BrokerFields draft={draft} onChange={setDraft} />
+      <KeyboardAvoidingScreen>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <BrokerFields draft={draft} onChange={setDraft} />
 
-        {existing && (
-          <Pressable style={styles.deleteBtn} onPress={onDelete}>
-            <Text style={styles.deleteText}>Delete broker</Text>
-          </Pressable>
-        )}
-      </ScrollView>
+          {existing && (
+            <Pressable style={styles.deleteBtn} onPress={onDelete}>
+              <Text style={styles.deleteText}>Delete broker</Text>
+            </Pressable>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingScreen>
     </View>
   );
 }

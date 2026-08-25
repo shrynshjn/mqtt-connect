@@ -93,6 +93,12 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        // AndroidManifest.xml's android:usesCleartextTraffic references this placeholder
+        // but nothing ever defined it, so the manifest merger failed on every build with
+        // an "unresolved placeholder" error. true because this app's own broker form lets
+        // users deliberately pick a plaintext transport (mqtt/ws) for brokers that don't
+        // offer TLS — that's a supported feature, not something to silently block.
+        manifestPlaceholders = [usesCleartextTraffic: "true"]
     }
     signingConfigs {
         debug {

@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer';
 import mqttDefault, {
+  type IClientOptions,
   type IConnackPacket,
   type IPublishPacket,
   type MqttClient as MqttClientType,
@@ -43,6 +44,18 @@ import { getPrefs } from '../storage/prefsRepo';
 const MqttClient = (
   mqttDefault as unknown as { MqttClient: typeof MqttClientType }
 ).MqttClient;
+
+// Same reasoning as MqttClient above — `connect` only exists as a property of the
+// default export in this build. Used solely for 'ws'/'wss' brokers: given a ws(s):// URL
+// it drives React Native's global `WebSocket` (mqtt.js's own browser stream builder,
+// selected because RN's `navigator.product === 'ReactNative'` reads as a browser
+// environment to mqtt.js) instead of the raw-socket path `makeStreamBuilder` builds for
+// 'tcp'/'tls'.
+const mqttConnect = (
+  mqttDefault as unknown as {
+    connect: (url: string, opts: IClientOptions) => MqttClientType;
+  }
+).connect;
 
 const FLUSH_DELAY_MS = 1000;
 let idCounter = 0;
@@ -140,18 +153,21 @@ export class ManagedConnection {
     // structurally-incompatible-but-runtime-correct types at the one call site.
     //
     // This construction call synchronously invokes the streamBuilder, which reaches into
-    // the native TLS socket module — any synchronous throw here (malformed native args,
-    // a native module issue) must not escape uncaught: in a release build there is no
-    // red-screen safety net, so an uncaught JS exception here is a hard app crash, not
-    // just a dev-mode warning.
+    // the native TLS socket module (or, for 'ws'/'wss', opens the platform WebSocket) —
+    // any synchronous throw here (malformed native args, a native module issue) must not
+    // escape uncaught: in a release build there is no red-screen safety net, so an
+    // uncaught JS exception here is a hard app crash, not just a dev-mode warning.
     let client: MqttClientType;
     try {
-      client = new MqttClient(
-        makeStreamBuilder(inputs.tcp) as unknown as ConstructorParameters<
-          typeof MqttClient
-        >[0],
-        inputs.client,
-      );
+      client =
+        inputs.kind === 'ws'
+          ? mqttConnect(inputs.url, inputs.client)
+          : new MqttClient(
+              makeStreamBuilder(inputs.tcp) as unknown as ConstructorParameters<
+                typeof MqttClient
+              >[0],
+              inputs.client,
+            );
     } catch (err) {
       this.setSnapshot({
         status: 'error',

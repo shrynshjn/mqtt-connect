@@ -7,6 +7,7 @@ import { colors, font, radius, space } from '../../ui/theme';
 import { useProfilesStore } from '../../state/profilesStore';
 import { useConnectionsStore } from '../../state/connectionsStore';
 import { ConnectionCard } from './ConnectionCard';
+import { HiveMQQuickStart } from '../demo/HiveMQQuickStart';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Hub'>;
 
@@ -42,6 +43,12 @@ export function HubScreen({ navigation }: Props) {
         {liveCount} live · {subCount} subscriptions · {profiles.length} client
         {profiles.length === 1 ? '' : 's'}
       </Text>
+
+      {profiles.length === 0 && (
+        <View style={styles.emptyDemo}>
+          <HiveMQQuickStart />
+        </View>
+      )}
 
       <FlatList
         contentContainerStyle={styles.list}
@@ -101,6 +108,7 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: space.md,
   },
+  emptyDemo: { paddingHorizontal: space.md, paddingBottom: space.sm },
   list: { paddingHorizontal: space.md, paddingBottom: space.xxl },
   addRow: {
     borderColor: colors.hairline,

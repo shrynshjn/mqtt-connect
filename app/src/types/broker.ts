@@ -12,6 +12,9 @@ export interface Broker {
   host: string;
   port: number;
   transport: Transport;
+  // WebSocket URL path (e.g. "/mqtt") — only meaningful for 'ws'/'wss'; defaults to "/"
+  // when absent.
+  path?: string;
   createdAt: string;
   updatedAt: string;
 }
