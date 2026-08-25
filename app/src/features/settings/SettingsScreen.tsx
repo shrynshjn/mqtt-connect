@@ -13,6 +13,7 @@ import { colors, font, radius, space } from '../../ui/theme';
 import { ToggleSwitch } from '../../ui/ToggleSwitch';
 import { getPrefs, setPrefs } from '../../storage/prefsRepo';
 import { showPrompt } from '../../ui/PromptModal';
+import { HiveMQQuickStart } from '../demo/HiveMQQuickStart';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -44,6 +45,11 @@ export function SettingsScreen({ navigation }: Props) {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Demo</Text>
+          <HiveMQQuickStart />
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionLabel}>Brokers</Text>
           <View style={styles.card}>
             <Pressable onPress={() => navigation.navigate('Brokers')}>
@@ -53,8 +59,8 @@ export function SettingsScreen({ navigation }: Props) {
             </Pressable>
           </View>
           <Text style={styles.hint}>
-            A broker is the server you connect to (host, port, protocol) — saved separately so multiple clients can
-            share the same one.
+            A broker is the server you connect to (host, port, protocol) — saved
+            separately so multiple clients can share the same one.
           </Text>
         </View>
 

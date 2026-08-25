@@ -31,6 +31,7 @@ export function BrokerFormScreen({ route, navigation }: Props) {
     host: existing?.host ?? '',
     port: String(existing?.port ?? 8883),
     transport: existing?.transport ?? 'tls',
+    path: existing?.path ?? '',
   });
 
   function onSave() {
@@ -45,6 +46,10 @@ export function BrokerFormScreen({ route, navigation }: Props) {
       host: draft.host.trim(),
       port: Number(draft.port) || 8883,
       transport: draft.transport,
+      path:
+        draft.transport === 'ws' || draft.transport === 'wss'
+          ? draft.path.trim() || undefined
+          : undefined,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     });

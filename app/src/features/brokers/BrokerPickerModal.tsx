@@ -20,6 +20,7 @@ const EMPTY_DRAFT: BrokerDraft = {
   host: '',
   port: '8883',
   transport: 'tls',
+  path: '',
 };
 
 export function BrokerPickerModal({
@@ -50,6 +51,10 @@ export function BrokerPickerModal({
       host: draft.host.trim(),
       port: Number(draft.port) || 8883,
       transport: draft.transport,
+      path:
+        draft.transport === 'ws' || draft.transport === 'wss'
+          ? draft.path.trim() || undefined
+          : undefined,
       createdAt: now,
       updatedAt: now,
     };
