@@ -98,7 +98,7 @@ export function saveProfile(profile: ConnectionProfile): void {
   if (!ids.includes(profile.id)) writeIndex([...ids, profile.id]);
 }
 
-function secretRefsOf(profile: ConnectionProfile): string[] {
+export function secretRefsOf(profile: ConnectionProfile): string[] {
   const refs: (string | undefined)[] = [
     profile.auth?.passwordRef,
     profile.tls?.caRef,

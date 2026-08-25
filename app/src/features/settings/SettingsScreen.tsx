@@ -102,9 +102,16 @@ export function SettingsScreen({ navigation }: Props) {
                 </Text>
               </Row>
             </Pressable>
-            <Row label="Export clients (no secrets)">
-              <Text style={styles.chevron}>›</Text>
-            </Row>
+            <Pressable onPress={() => navigation.navigate('ExportPicker')}>
+              <Row label="Export clients & brokers">
+                <Text style={styles.chevron}>›</Text>
+              </Row>
+            </Pressable>
+            <Pressable onPress={() => navigation.navigate('Import')}>
+              <Row label="Import clients & brokers">
+                <Text style={styles.chevron}>›</Text>
+              </Row>
+            </Pressable>
             <Pressable
               onPress={() =>
                 Alert.alert(
