@@ -10,7 +10,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../app/navigation';
 import { colors, font, radius, space } from '../../ui/theme';
-import { showPrompt } from '../../ui/PromptModal';
+import { LocalPasswordPrompt } from '../../ui/LocalPasswordPrompt';
 import { useToast } from '../../ui/Toast';
 import { pickAndReadFile, type PickedFile } from '../../crypto/filePicker';
 import { CertSlotRow } from '../profile/CertSlotRow';
@@ -44,35 +44,37 @@ export function ImportScreen({ navigation }: Props) {
     new Set(),
   );
   const [busy, setBusy] = useState(false);
+  const [passwordPromptOpen, setPasswordPromptOpen] = useState(false);
+  // This screen has `presentation: 'modal'` in navigation.tsx, which puts it in its own
+  // natively-presented view controller — the global toast (rendered at the app root) is
+  // hidden behind that, same as the old showPrompt()-based dialog was (see
+  // LocalPasswordPrompt.tsx for the full explanation). A local inline banner is used
+  // instead for anything that needs to stay visible while still on this screen.
+  const [importError, setImportError] = useState<string | null>(null);
 
   async function onPickFile() {
     try {
       const file = await pickAndReadFile('utf8');
       if (!file) return;
+      setImportError(null);
       setPickedFile(file);
-      promptForPassword(file);
+      setPasswordPromptOpen(true);
     } catch (e) {
-      show(`Could not read file · ${(e as Error).message}`);
+      setImportError(`Could not read file · ${(e as Error).message}`);
     }
   }
 
-  async function promptForPassword(file: PickedFile) {
-    const pw = await showPrompt(
-      'Backup password',
-      `Enter the password used to encrypt "${file.name}".`,
-      { secure: true },
-    );
-    if (pw == null) return;
-
+  async function decryptWithPassword(password: string) {
+    if (!pickedFile) return;
     setBusy(true);
     try {
-      const decrypted = await decryptPayload(file.content, pw);
+      const decrypted = await decryptPayload(pickedFile.content, password);
       setPayload(decrypted);
       setSelectedProfileIds(new Set(decrypted.profiles.map(p => p.originalId)));
       setSelectedBrokerIds(new Set(decrypted.brokers.map(b => b.originalId)));
       setStep('select');
     } catch (e) {
-      show(
+      setImportError(
         e instanceof BackupDecryptError
           ? 'Wrong password — try again'
           : `Could not read backup · ${(e as Error).message}`,
@@ -118,7 +120,7 @@ export function ImportScreen({ navigation }: Props) {
       );
       navigation.popToTop();
     } catch (e) {
-      show(`Import failed · ${(e as Error).message}`);
+      setImportError(`Import failed · ${(e as Error).message}`);
     } finally {
       setBusy(false);
     }
@@ -144,6 +146,12 @@ export function ImportScreen({ navigation }: Props) {
         <Text style={styles.title}>Import</Text>
       </View>
 
+      {importError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{importError}</Text>
+        </View>
+      )}
+
       {step === 'pick' && (
         <View style={styles.pickContent}>
           <CertSlotRow
@@ -160,7 +168,7 @@ export function ImportScreen({ navigation }: Props) {
             <Pressable
               style={[styles.primaryBtn, busy && styles.primaryBtnDisabled]}
               disabled={busy}
-              onPress={() => promptForPassword(pickedFile)}
+              onPress={() => setPasswordPromptOpen(true)}
             >
               {busy && (
                 <ActivityIndicator size="small" color={colors.textTertiary} />
@@ -239,6 +247,22 @@ export function ImportScreen({ navigation }: Props) {
           />
         </>
       )}
+
+      <LocalPasswordPrompt
+        visible={passwordPromptOpen}
+        title="Backup password"
+        message={
+          pickedFile
+            ? `Enter the password used to encrypt "${pickedFile.name}".`
+            : undefined
+        }
+        onCancel={() => setPasswordPromptOpen(false)}
+        onSubmit={password => {
+          setPasswordPromptOpen(false);
+          setImportError(null);
+          decryptWithPassword(password);
+        }}
+      />
     </View>
   );
 }
@@ -267,6 +291,21 @@ const styles = StyleSheet.create({
   },
   backIcon: { color: colors.textSecondary, fontSize: 15 },
   title: { fontSize: 17, fontWeight: '700', color: colors.text },
+  errorBanner: {
+    marginHorizontal: space.md,
+    marginTop: space.sm,
+    backgroundColor: colors.faultDim,
+    borderColor: colors.faultBorder,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: space.sm,
+  },
+  errorBannerText: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    color: colors.fault,
+    lineHeight: 15,
+  },
   pickContent: { padding: space.md, gap: space.md },
   primaryBtn: {
     flexDirection: 'row',

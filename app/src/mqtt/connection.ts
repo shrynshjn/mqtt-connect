@@ -71,6 +71,11 @@ type MessagesListener = (messages: MqttMessage[]) => void;
  * message buffer, and persistence — nothing here depends on any screen being mounted. */
 export class ManagedConnection {
   private client: MqttClientType | null = null;
+  // Set for the duration of a manual disconnect() so the client's later, async 'close'
+  // event (end(true) doesn't close synchronously) can recognize it was expected —
+  // checking this.snapshot.status there doesn't work because disconnect() has already
+  // overwritten it to 'idle' by the time 'close' fires.
+  private manualDisconnect = false;
   private snapshot: ConnectionSnapshot;
   private messages: MqttMessage[];
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -129,6 +134,7 @@ export class ManagedConnection {
 
   connect(): void {
     if (this.client) return;
+    this.manualDisconnect = false;
     this.setSnapshot({
       status: 'connecting',
       statusSince: Date.now(),
@@ -202,7 +208,10 @@ export class ManagedConnection {
     });
 
     client.on('close', () => {
-      if (this.snapshot.status === 'disconnecting') return;
+      if (this.manualDisconnect) {
+        this.manualDisconnect = false;
+        return;
+      }
       if (this.snapshot.status === 'error') {
         // mqtt.js's own reconnect loop is done retrying (or was never started) by the
         // time 'close' fires after an error — clear the client so a later tap of
@@ -236,6 +245,7 @@ export class ManagedConnection {
   }
 
   disconnect(): void {
+    this.manualDisconnect = true;
     this.setSnapshot({ status: 'disconnecting', statusSince: Date.now() });
     this.client?.end(true);
     this.client = null;

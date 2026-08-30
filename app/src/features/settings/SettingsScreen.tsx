@@ -12,25 +12,32 @@ import type { RootStackParamList } from '../../app/navigation';
 import { colors, font, radius, space } from '../../ui/theme';
 import { ToggleSwitch } from '../../ui/ToggleSwitch';
 import { getPrefs, setPrefs } from '../../storage/prefsRepo';
-import { showPrompt } from '../../ui/PromptModal';
+import { LocalTextPrompt } from '../../ui/LocalTextPrompt';
+import { useToast } from '../../ui/Toast';
+import { useProfilesStore } from '../../state/profilesStore';
 import { HiveMQQuickStart } from '../demo/HiveMQQuickStart';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export function SettingsScreen({ navigation }: Props) {
   const [prefs, setLocalPrefs] = useState(getPrefs());
+  const show = useToast();
+  const [bufferPromptOpen, setBufferPromptOpen] = useState(false);
 
   function update(patch: Partial<ReturnType<typeof getPrefs>>) {
     setLocalPrefs(setPrefs(patch));
   }
 
-  async function changeBufferCap() {
-    const value = await showPrompt(
-      'Message buffer per connection',
-      'How many messages to keep per connection before older ones are trimmed.',
-    );
+  function eraseAllData() {
+    useProfilesStore.getState().eraseAll();
+    navigation.popToTop();
+    show('All data erased');
+  }
+
+  function onBufferCapSubmit(value: string) {
+    setBufferPromptOpen(false);
     const n = Number(value);
-    if (value != null && Number.isFinite(n) && n > 0)
+    if (Number.isFinite(n) && n > 0)
       update({ messageBufferPerConnection: Math.floor(n) });
   }
 
@@ -95,7 +102,7 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Data</Text>
           <View style={styles.card}>
-            <Pressable onPress={changeBufferCap}>
+            <Pressable onPress={() => setBufferPromptOpen(true)}>
               <Row label="Message buffer per connection">
                 <Text style={styles.value}>
                   {prefs.messageBufferPerConnection.toLocaleString()}
@@ -119,7 +126,11 @@ export function SettingsScreen({ navigation }: Props) {
                   'This removes every client, broker, credential, and certificate from this device. This cannot be undone.',
                   [
                     { text: 'Cancel', style: 'cancel' },
-                    { text: 'Erase', style: 'destructive', onPress: () => {} },
+                    {
+                      text: 'Erase',
+                      style: 'destructive',
+                      onPress: eraseAllData,
+                    },
                   ],
                 )
               }
@@ -134,9 +145,19 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         <Text style={styles.footer}>
-          MQTT Connect 1.0 (build 1){'\n'}offline · no telemetry
+          MQTT Connect 1.2 (build 4){'\n'}offline · no telemetry
         </Text>
       </ScrollView>
+
+      <LocalTextPrompt
+        visible={bufferPromptOpen}
+        title="Message buffer per connection"
+        message="How many messages to keep per connection before older ones are trimmed."
+        initialValue={String(prefs.messageBufferPerConnection)}
+        keyboardType="number-pad"
+        onCancel={() => setBufferPromptOpen(false)}
+        onSubmit={onBufferCapSubmit}
+      />
     </View>
   );
 }

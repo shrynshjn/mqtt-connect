@@ -16,7 +16,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../app/navigation';
 import { colors, font, radius, space } from '../../ui/theme';
-import { showPrompt } from '../../ui/PromptModal';
+import { LocalPasswordPrompt } from '../../ui/LocalPasswordPrompt';
 import { useToast } from '../../ui/Toast';
 import { listProfiles } from '../../storage/profileRepo';
 import { listBrokers } from '../../storage/brokerRepo';
@@ -41,6 +41,13 @@ export function ExportPickerScreen({ navigation }: Props) {
     new Set(),
   );
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [passwordPromptOpen, setPasswordPromptOpen] = useState(false);
+  // The global toast (useToast/ToastProvider) is rendered at the app root, which is
+  // hidden behind this screen's own native modal presentation the same way the old
+  // password prompt was — fine for the success path (it shows right as this screen
+  // dismisses), but an error here needs to be visible while still ON this screen.
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -89,37 +96,22 @@ export function ExportPickerScreen({ navigation }: Props) {
     }
   }
 
-  async function onExportPressed() {
+  function onExportPressed() {
     if (selectedCount === 0 || busy) return;
+    setPasswordPromptOpen(true);
+  }
 
-    const pw1 = await showPrompt(
-      'Set a password',
-      'This encrypts the backup file. You will need this exact password to import it later.',
-      { secure: true },
-    );
-    if (pw1 == null) return;
-    if (!pw1) {
-      show('Password cannot be empty');
-      return;
-    }
-
-    const pw2 = await showPrompt('Confirm password', undefined, {
-      secure: true,
-    });
-    if (pw2 == null) return;
-    if (pw2 !== pw1) {
-      show('Passwords did not match — try again');
-      return;
-    }
-
+  async function runExport(password: string) {
     setBusy(true);
+    setProgress(0);
+    setExportError(null);
     let tempPath: string | undefined;
     try {
       const payload = buildExportPayload(
         [...selectedProfileIds],
         [...selectedBrokerIds],
       );
-      const encrypted = await encryptPayload(payload, pw1);
+      const encrypted = await encryptPayload(payload, password, setProgress);
 
       const filename = `mqtt-connect-backup-${new Date()
         .toISOString()
@@ -127,6 +119,9 @@ export function ExportPickerScreen({ navigation }: Props) {
       tempPath = `${CachesDirectoryPath}/${filename}`;
       await writeFile(tempPath, encrypted, 'utf8');
 
+      // The native share sheet has its own chrome (cancel, activity list) — drop our
+      // busy overlay before handing off to it rather than leaving it stacked underneath.
+      setBusy(false);
       const result = await Share.open({
         url: `file://${tempPath}`,
         type: 'application/json',
@@ -139,7 +134,7 @@ export function ExportPickerScreen({ navigation }: Props) {
         navigation.goBack();
       }
     } catch (e) {
-      show(`Export failed · ${(e as Error).message}`);
+      setExportError((e as Error).message);
     } finally {
       if (tempPath) unlink(tempPath).catch(() => {});
       setBusy(false);
@@ -149,19 +144,31 @@ export function ExportPickerScreen({ navigation }: Props) {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          disabled={busy}
+          style={[styles.backBtn, busy && styles.dimmed]}
+        >
           <Text style={styles.backIcon}>←</Text>
         </Pressable>
         <Text style={styles.title}>Export</Text>
       </View>
+
+      {exportError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>
+            Export failed · {exportError}
+          </Text>
+        </View>
+      )}
 
       <View style={styles.summaryRow}>
         <Text style={styles.summary}>
           {selectedCount} of {totalCount} selected
         </Text>
         {totalCount > 0 && (
-          <Pressable onPress={toggleSelectAll}>
-            <Text style={styles.selectAll}>
+          <Pressable onPress={toggleSelectAll} disabled={busy}>
+            <Text style={[styles.selectAll, busy && styles.dimmed]}>
               {allSelected ? 'Clear all' : 'Select all'}
             </Text>
           </Pressable>
@@ -186,7 +193,7 @@ export function ExportPickerScreen({ navigation }: Props) {
               title={broker.name}
               subtitle={`${schemeFor(broker.transport)}://${broker.host}:${broker.port}`}
               selected={selectedBrokerIds.has(broker.id) || anyChildSelected}
-              disabled={anyChildSelected}
+              disabled={anyChildSelected || busy}
               onToggle={() => toggleBroker(broker.id)}
             />
           );
@@ -196,6 +203,7 @@ export function ExportPickerScreen({ navigation }: Props) {
             <SelectableRow
               title={item.name}
               selected={selectedProfileIds.has(item.id)}
+              disabled={busy}
               onToggle={() => toggleProfile(item.id)}
             />
           </View>
@@ -222,6 +230,40 @@ export function ExportPickerScreen({ navigation }: Props) {
             </Text>
           </Pressable>
         }
+      />
+
+      {busy && (
+        <View style={styles.overlayBackdrop}>
+          <View style={styles.overlayCard}>
+            <Text style={styles.overlayPercent}>
+              {Math.round(progress * 100)}%
+            </Text>
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${Math.round(progress * 100)}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.overlayTitle}>Encrypting backup…</Text>
+            <Text style={styles.overlaySubtitle}>
+              Deriving your key from the password — don't close the app.
+            </Text>
+          </View>
+        </View>
+      )}
+
+      <LocalPasswordPrompt
+        visible={passwordPromptOpen}
+        title="Set a password"
+        message="This encrypts the backup file. You will need this exact password to import it later."
+        confirmRequired
+        onCancel={() => setPasswordPromptOpen(false)}
+        onSubmit={password => {
+          setPasswordPromptOpen(false);
+          runExport(password);
+        }}
       />
     </View>
   );
@@ -251,6 +293,22 @@ const styles = StyleSheet.create({
   },
   backIcon: { color: colors.textSecondary, fontSize: 15 },
   title: { fontSize: 17, fontWeight: '700', color: colors.text },
+  dimmed: { opacity: 0.4 },
+  errorBanner: {
+    marginHorizontal: space.md,
+    marginTop: space.sm,
+    backgroundColor: colors.faultDim,
+    borderColor: colors.faultBorder,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: space.sm,
+  },
+  errorBannerText: {
+    fontFamily: font.mono,
+    fontSize: 11,
+    color: colors.fault,
+    lineHeight: 15,
+  },
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -281,4 +339,56 @@ const styles = StyleSheet.create({
   exportBtnDisabled: { opacity: 0.4 },
   exportText: { fontSize: 15, fontWeight: '700', color: colors.bg },
   exportTextBusy: { color: colors.textTertiary },
+  overlayBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(4,7,13,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: space.xl,
+  },
+  overlayCard: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: colors.surface,
+    borderColor: colors.hairlineHi,
+    borderWidth: 1,
+    borderRadius: radius.xl,
+    padding: space.lg,
+    alignItems: 'center',
+    gap: space.sm,
+  },
+  overlayTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: space.xs,
+  },
+  overlaySubtitle: {
+    fontSize: 12.5,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  overlayPercent: {
+    fontFamily: font.mono,
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.accent,
+  },
+  progressTrack: {
+    width: '100%',
+    height: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.hairline,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: radius.pill,
+    backgroundColor: colors.accent,
+  },
 });
