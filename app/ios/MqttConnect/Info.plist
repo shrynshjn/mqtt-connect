@@ -39,6 +39,8 @@
 	<string>MQTT Connect needs local network access to connect to brokers running on your Wi-Fi network (e.g. a local Mosquitto instance).</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MQTT Connect does not access your photo library. This description is only required because the system share sheet used to save or send an encrypted backup file links a framework that references photo library APIs.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
