@@ -6,6 +6,12 @@ buildscript {
         targetSdkVersion = 36
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.2.0"
+        // Required by react-native-in-app-review's Android build.gradle (safeExtGet with
+        // no fallback — build fails without these). The split `com.google.android.play:review`
+        // artifact, not the deprecated monolithic `com.google.android.play:core` (which has
+        // an android:exported manifest issue Play Console flags for apps targeting API 31+).
+        playReviewVersion = "2.0.2"
+        playServicesVersion = "18.10.1"
     }
     repositories {
         google()

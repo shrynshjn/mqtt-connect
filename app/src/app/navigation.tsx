@@ -14,6 +14,7 @@ import { BrokersScreen } from '../features/brokers/BrokersScreen';
 import { BrokerFormScreen } from '../features/brokers/BrokerFormScreen';
 import { ExportPickerScreen } from '../features/backup/ExportPickerScreen';
 import { ImportScreen } from '../features/backup/ImportScreen';
+import { FeedbackScreen } from '../features/feedback/FeedbackScreen';
 
 export type RootStackParamList = {
   Hub: undefined;
@@ -24,6 +25,7 @@ export type RootStackParamList = {
   BrokerForm: { brokerId?: string };
   ExportPicker: undefined;
   Import: undefined;
+  Feedback: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -74,6 +76,11 @@ export function AppNavigator() {
         <Stack.Screen
           name="Import"
           component={ImportScreen}
+          options={{ presentation: 'modal' }}
+        />
+        <Stack.Screen
+          name="Feedback"
+          component={FeedbackScreen}
           options={{ presentation: 'modal' }}
         />
       </Stack.Navigator>

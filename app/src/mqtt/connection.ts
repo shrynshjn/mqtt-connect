@@ -32,6 +32,7 @@ import {
   clearMessages as clearPersistedMessages,
 } from '../storage/messageRepo';
 import { getPrefs } from '../storage/prefsRepo';
+import { notifyMilestone } from '../review/reviewPrompt';
 
 // mqtt's React Native build (dist/mqtt.esm.js, selected via the package's "react-native"
 // export condition) has exactly one static export — `export default` — with MqttClient,
@@ -197,6 +198,7 @@ export class ManagedConnection {
         },
       });
       this.resubscribeAll();
+      notifyMilestone('firstConnect');
     });
 
     client.on('reconnect', () => {

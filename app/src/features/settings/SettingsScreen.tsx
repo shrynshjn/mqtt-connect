@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  Image,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +17,13 @@ import { getPrefs, setPrefs } from '../../storage/prefsRepo';
 import { LocalTextPrompt } from '../../ui/LocalTextPrompt';
 import { useToast } from '../../ui/Toast';
 import { useProfilesStore } from '../../state/profilesStore';
+import { getAppVersionString } from '../../config/appVersion';
+import {
+  developerSiteUrl,
+  privacyPolicyUrl,
+  termsUrl,
+} from '../../config/appLinks';
+import { openStoreListing } from '../../review/reviewPrompt';
 import { HiveMQQuickStart } from '../demo/HiveMQQuickStart';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
@@ -144,8 +153,64 @@ export function SettingsScreen({ navigation }: Props) {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Legal</Text>
+          <View style={styles.card}>
+            <Pressable onPress={() => Linking.openURL(privacyPolicyUrl())}>
+              <Row label="Privacy Policy">
+                <Text style={styles.chevron}>›</Text>
+              </Row>
+            </Pressable>
+            <Pressable onPress={() => Linking.openURL(termsUrl())}>
+              <Row label="Terms of Use" last>
+                <Text style={styles.chevron}>›</Text>
+              </Row>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Feedback &amp; Rating</Text>
+          <View style={styles.card}>
+            <Pressable onPress={() => navigation.navigate('Feedback')}>
+              <Row label="Send feedback">
+                <Text style={styles.chevron}>›</Text>
+              </Row>
+            </Pressable>
+            <Pressable onPress={openStoreListing}>
+              <Row label="Rate MQTT Connect" last>
+                <Text style={styles.chevron}>›</Text>
+              </Row>
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Developer</Text>
+          <View style={styles.developerCard}>
+            <Image
+              source={require('../../assets/images/developer-caricature.png')}
+              style={styles.avatar}
+            />
+            <Text style={styles.developerNote}>
+              I'm the CTO of an IoT company, managing all kinds of connected
+              devices day to day — and MQTT Connect exists because I needed it
+              myself. Built with care, it's exactly the MQTT client I wanted on
+              my own phone.
+            </Text>
+          </View>
+          <View style={styles.card}>
+            <Pressable onPress={() => Linking.openURL(developerSiteUrl())}>
+              <Row label="Visit my website" last>
+                <Text style={styles.chevron}>›</Text>
+              </Row>
+            </Pressable>
+          </View>
+        </View>
+
         <Text style={styles.footer}>
-          MQTT Connect 1.2 (build 4){'\n'}offline · no telemetry
+          MQTT Connect {getAppVersionString()}
+          {'\n'}offline · no telemetry
         </Text>
       </ScrollView>
 
@@ -234,6 +299,28 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 14, color: colors.text, flex: 1 },
   value: { fontSize: 13, color: colors.textTertiary },
   chevron: { fontSize: 14, color: colors.textTertiary },
+  developerCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.hairline,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    padding: space.md,
+    flexDirection: 'row',
+    gap: space.md,
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.surfaceRaised,
+  },
+  developerNote: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.textSecondary,
+  },
   hint: {
     fontFamily: font.mono,
     fontSize: 10,

@@ -17,6 +17,7 @@ import { TopicSuggestionChips } from '../topics/TopicSuggestionChips';
 import { suggestTopics } from '../../topics/topicSuggestions';
 import { isValidPublishTopic } from '../../mqtt/topicMatch';
 import { addSnippet } from '../../storage/snippetRepo';
+import { notifyMilestone } from '../../review/reviewPrompt';
 import { stripSmartPunctuation } from '../../ui/sanitizeText';
 import {
   emptyRow,
@@ -102,6 +103,7 @@ export function PublishTab({
       retain,
     });
     show('pinned to feed');
+    notifyMilestone('firstSnippetPin');
   }
 
   return (

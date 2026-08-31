@@ -2,6 +2,16 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Lets Linking.canOpenURL('mailto:...') resolve reliably — targetSdkVersion 36
+         enforces package-visibility restrictions (Android 11+) that hide other apps'
+         intent filters unless declared here. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
