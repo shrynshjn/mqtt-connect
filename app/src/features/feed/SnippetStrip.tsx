@@ -7,10 +7,12 @@ export function SnippetStrip({
   snippets,
   onFire,
   onAdd,
+  onRemove,
 }: {
   snippets: Snippet[];
   onFire: (s: Snippet) => void;
   onAdd: () => void;
+  onRemove: (s: Snippet) => void;
 }) {
   // With zero snippets, a lone unlabeled "+" glyph reads as a mystery — its meaning
   // only comes across once it sits at the end of a row of real chips. Spell it out
@@ -41,6 +43,13 @@ export function SnippetStrip({
               {s.topic}
             </Text>
           </View>
+          <Pressable
+            onPress={() => onRemove(s)}
+            hitSlop={8}
+            style={styles.removeBtn}
+          >
+            <Text style={styles.removeText}>×</Text>
+          </Pressable>
         </Pressable>
       ))}
       <Pressable onPress={onAdd} style={styles.addChip}>
@@ -96,6 +105,19 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     color: colors.textTertiary,
     maxWidth: 140,
+  },
+  removeBtn: {
+    marginLeft: 2,
+    width: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+  },
+  removeText: {
+    color: colors.textTertiary,
+    fontSize: 15,
+    lineHeight: 15,
   },
   addChip: {
     width: 34,

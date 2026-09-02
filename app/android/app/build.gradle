@@ -91,8 +91,8 @@ android {
         applicationId "com.shrynshjn.secure.mqtt.connect"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.2"
+        versionCode 5
+        versionName "1.3"
         // AndroidManifest.xml's android:usesCleartextTraffic references this placeholder
         // but nothing ever defined it, so the manifest merger failed on every build with
         // an "unresolved placeholder" error. true because this app's own broker form lets
