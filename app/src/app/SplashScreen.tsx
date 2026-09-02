@@ -1,6 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
-import Svg, { Circle, Defs, Line, RadialGradient, Stop } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  Line,
+  RadialGradient,
+  Stop,
+} from 'react-native-svg';
 import BootSplash from 'react-native-bootsplash';
 import { colors, font } from '../ui/theme';
 import bootSplashManifest from '../../assets/bootsplash/manifest.json';
