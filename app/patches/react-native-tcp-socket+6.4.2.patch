@@ -1,8 +1,30 @@
 diff --git a/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java b/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java
-index 1e0622f..0f761ec 100644
+index 1e0622f..e51c016 100644
 --- a/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java
 +++ b/node_modules/react-native-tcp-socket/android/src/main/java/com/asterinet/react/tcpsocket/SSLCertificateHelper.java
-@@ -191,9 +191,31 @@ final class SSLCertificateHelper {
+@@ -106,8 +106,19 @@ final class SSLCertificateHelper {
+             PemObject pemObject = pemReader.readPemObject();
+             byte[] pemContent = pemObject.getContent();
+             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pemContent);
+-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+-            return keyFactory.generatePrivate(keySpec);
++            // PATCHED (mqtt-connect): upstream only ever tried KeyFactory("RSA"), so EC
++            // (ECDSA) client keys always failed to load. The PKCS#8 wrapper names its own
++            // algorithm, so try RSA first (unchanged behavior) and fall back to EC.
++            try {
++                return KeyFactory.getInstance("RSA").generatePrivate(keySpec);
++            } catch (java.security.spec.InvalidKeySpecException rsaError) {
++                try {
++                    return KeyFactory.getInstance("EC").generatePrivate(keySpec);
++                } catch (java.security.spec.InvalidKeySpecException ecError) {
++                    rsaError.addSuppressed(ecError);
++                    throw rsaError;
++                }
++            }
+         } catch (Exception e) {
+             throw new RuntimeException("Failed to parse private key from PEM", e);
+         }
+@@ -191,9 +202,31 @@ final class SSLCertificateHelper {
              KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
              keyManagerFactory.init(keyStore, new char[0]);
  
@@ -36,10 +58,10 @@ index 1e0622f..0f761ec 100644
          } else {
              // Keep old behavior
 diff --git a/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m b/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m
-index a3df69c..0ce5b5b 100644
+index a3df69c..0d3d24c 100644
 --- a/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m
 +++ b/node_modules/react-native-tcp-socket/ios/TcpSocketClient.m
-@@ -514,15 +514,14 @@ - (void)socket:(GCDAsyncSocket *)sock
+@@ -514,15 +514,14 @@ NSString *const RCTTCPErrorDomain = @"RCTTCPErrorDomain";
          return;
      }
  
@@ -63,7 +85,7 @@ index a3df69c..0ce5b5b 100644
      NSString *pemCaCert = [_resolvableCaCert resolve];
      if (!pemCaCert) {
          RCTLogWarn(@"Failed to resolve CA certificate");
-@@ -538,29 +537,32 @@ - (void)socket:(GCDAsyncSocket *)sock
+@@ -538,29 +537,32 @@ NSString *const RCTTCPErrorDomain = @"RCTTCPErrorDomain";
                              options:
                                  NSDataBase64DecodingIgnoreUnknownCharacters];
  
@@ -111,3 +133,48 @@ index a3df69c..0ce5b5b 100644
  }
  
  - (void)socket:(GCDAsyncSocket *)sock
+@@ -601,13 +603,20 @@ typedef NS_ENUM(NSInteger, PEMType) {
+     PEMTypeUnknown,
+     PEMTypeCertificate,
+     PEMTypePKCS1,
+-    PEMTypePKCS8
++    PEMTypePKCS8,
++    // PATCHED (mqtt-connect): raw ANSI X9.63 EC private key (0x04||X||Y||D), the format
++    // SecKeyCreateWithData expects for kSecAttrKeyTypeECSECPrimeRandom. The app's JS
++    // layer converts SEC1/PKCS#8 EC keys into this before handing them over.
++    PEMTypeECX963
+ };
+ 
+ - (PEMType)detectPEMType:(NSString *)pemData {
+     if ([pemData containsString:@"BEGIN CERTIFICATE"]) {
+         return PEMTypeCertificate;
+     }
++    if ([pemData containsString:@"BEGIN EC X963 PRIVATE KEY"]) {
++        return PEMTypeECX963;
++    }
+     if ([pemData containsString:@"BEGIN PRIVATE KEY"]) {
+         return PEMTypePKCS8;
+     }
+@@ -643,6 +652,9 @@ typedef NS_ENUM(NSInteger, PEMType) {
+     case PEMTypePKCS1:
+         prefix = @"RSA PRIVATE KEY";
+         break;
++    case PEMTypeECX963:
++        prefix = @"EC X963 PRIVATE KEY";
++        break;
+     default:
+         return nil;
+     }
+@@ -744,8 +756,11 @@ typedef NS_ENUM(NSInteger, PEMType) {
+         return NULL;
+     }
+                                     
++    BOOL isECKey = [self detectPEMType:pemKey] == PEMTypeECX963;
+     NSDictionary *privateKeyAttributes = @{
+-        (__bridge id)kSecAttrKeyType : (__bridge id)kSecAttrKeyTypeRSA,
++        (__bridge id)kSecAttrKeyType : isECKey
++            ? (__bridge id)kSecAttrKeyTypeECSECPrimeRandom
++            : (__bridge id)kSecAttrKeyTypeRSA,
+         (__bridge id)kSecAttrKeyClass : (__bridge id)kSecAttrKeyClassPrivate
+     };
+     CFErrorRef error = NULL;

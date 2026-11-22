@@ -17,7 +17,12 @@ import { useProfilesStore } from '../../state/profilesStore';
 import { newProfileId, getProfile } from '../../storage/profileRepo';
 import { newSecretId, setSecret, getSecret } from '../../storage/secretRepo';
 import { certMetaFromPem } from '../../crypto/certInfo';
-import { parsePrivateKeyPem, toCanonicalPem } from '../../crypto/keyNormalize';
+import {
+  describeKey,
+  keyMatchesCertificate,
+  parsePrivateKeyPem,
+  toCanonicalPem,
+} from '../../crypto/keyNormalize';
 import { unwrapPkcs12 } from '../../crypto/pkcs12';
 import { splitAndClassifyPem } from '../../crypto/pem';
 import { pickAndReadFile } from '../../crypto/filePicker';
@@ -81,7 +86,7 @@ export function ProfileFormScreen({ route, navigation }: Props) {
   const [username, setUsername] = useState(existing?.auth?.username ?? '');
   const [password, setPassword] = useState(
     existing?.auth?.passwordRef
-      ? (getSecret(existing.auth.passwordRef) ?? '')
+      ? getSecret(existing.auth.passwordRef) ?? ''
       : '',
   );
   const [showPassword, setShowPassword] = useState(false);
@@ -174,7 +179,7 @@ export function ProfileFormScreen({ route, navigation }: Props) {
     try {
       const parsed = parsePrivateKeyPem(pem, passphrase);
       setKey({
-        pem: toCanonicalPem(parsed.forgeKey),
+        pem: toCanonicalPem(parsed),
         fileName,
         keyAlgorithm: parsed.algorithm,
         keySizeBits: parsed.keySizeBits,
@@ -216,7 +221,7 @@ export function ProfileFormScreen({ route, navigation }: Props) {
       setKey({
         pem: bundle.keyPem,
         fileName: 'bundle (key)',
-        keyAlgorithm: 'RSA',
+        keyAlgorithm: bundle.keyAlgorithm,
         keySizeBits: bundle.keySizeBits,
       });
       if (bundle.chainPems[0] && !ca) {
@@ -287,10 +292,25 @@ export function ProfileFormScreen({ route, navigation }: Props) {
       );
       return;
     }
+    if (certOn && cert && key) {
+      let matches: boolean | undefined;
+      try {
+        matches = keyMatchesCertificate(parsePrivateKeyPem(key.pem), cert.pem);
+      } catch {
+        matches = undefined;
+      }
+      if (matches === false) {
+        Alert.alert(
+          'Key does not match certificate',
+          'The client private key is not the key pair of the client certificate. Pick the key that was used to request this certificate.',
+        );
+        return;
+      }
+    }
 
     const id = existing?.id ?? newProfileId();
     const passwordRef = password
-      ? (existing?.auth?.passwordRef ?? newSecretId())
+      ? existing?.auth?.passwordRef ?? newSecretId()
       : undefined;
     if (passwordRef) setSecret(passwordRef, password);
 
@@ -504,7 +524,11 @@ export function ProfileFormScreen({ route, navigation }: Props) {
                     <CertSlotRow
                       label="Client private key"
                       hint="client.key"
-                      value={key ? toSlotValue(key.fileName) : null}
+                      value={
+                        key
+                          ? toSlotValue(`${key.fileName} · ${describeKey(key)}`)
+                          : null
+                      }
                       onPick={pickKey}
                       onClear={() => setKey(null)}
                     />
