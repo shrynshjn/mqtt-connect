@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import type { ErrorCategory, NormalizedError } from '../types/connection';
 
 const CONNACK_REASONS: Record<number, string> = {
@@ -45,9 +44,7 @@ function hintFor(category: ErrorCategory): string | undefined {
     case 'tcp':
       return 'Connection refused or timed out — check the host, port, and that the broker is reachable from this network.';
     case 'tls-client-cert':
-      return Platform.OS === 'android'
-        ? 'Android needs the client key as unencrypted PKCS#8 — if this key came from a PKCS#1 ("BEGIN RSA PRIVATE KEY") export, re-export it as PKCS#8.'
-        : 'iOS needs the client key as PKCS#1 — if this key came from a PKCS#8 ("BEGIN PRIVATE KEY") export, that should have been converted automatically; try re-importing the certificate.';
+      return 'The client certificate or key could not be used for the TLS handshake — make sure the private key belongs to this client certificate (RSA, or EC on P-256/P-384/P-521) and try re-importing both.';
     case 'tls-trust':
       return "The server's certificate could not be verified against the configured CA — confirm you uploaded the right CA (or the correct intermediate) for this broker.";
     case 'tls-handshake':

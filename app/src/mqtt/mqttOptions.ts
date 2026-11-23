@@ -101,7 +101,7 @@ export function buildConnectionInputs(
       const parsed = parsePrivateKeyPem(keyPem, passphrase);
 
       cert = certPem;
-      key = emitKeyPemForPlatform(parsed.forgeKey);
+      key = emitKeyPemForPlatform(parsed, certPem);
       certAlias = profile.tls.identity.iosCertAlias;
       keyAlias = profile.tls.identity.iosKeyAlias;
     }
