@@ -8,7 +8,6 @@ import { useToast } from '../../ui/Toast';
 import { showPrompt } from '../../ui/PromptModal';
 import {
   DEMO_VARIANTS,
-  HIVEMQ_TLS_CA_PEM,
   buildQuickStartPlan,
   commitQuickStartPlan,
   type DemoVariant,
@@ -20,8 +19,9 @@ type Step =
   | { kind: 'walkthrough'; plan: QuickStartPlan; profileId: string };
 
 /** Self-contained "try it live" card — a row of one-tap buttons that each set up (or
- * reconnect) a client against HiveMQ's public test broker over a different transport,
- * with a confirmation step first and a short walkthrough after. Dropped into the Hub's
+ * reconnect) a client against a public test broker: HiveMQ over each transport, plus
+ * test.mosquitto.org for mutual TLS with an on-device EC client certificate. A
+ * confirmation step comes first and a short walkthrough after. Dropped into the Hub's
  * empty state and permanently into Settings, so it doesn't need to know which screen
  * it's on. */
 export function HiveMQQuickStart() {
@@ -37,7 +37,7 @@ export function HiveMQQuickStart() {
 
   async function onConfirm(plan: QuickStartPlan) {
     let caPem: string | undefined;
-    if (plan.variant.requiresCa && !HIVEMQ_TLS_CA_PEM) {
+    if (plan.variant.requiresCa && !plan.variant.caPem) {
       const pasted = await showPrompt(
         'HiveMQ CA certificate',
         "Paste the PEM certificate chain for broker.hivemq.com — needed once, since this app pins TLS connections to an explicit CA rather than trusting the device's certificate store.",
@@ -48,7 +48,7 @@ export function HiveMQQuickStart() {
     }
     setBusy(true);
     try {
-      const { profileId } = commitQuickStartPlan(plan, caPem);
+      const { profileId } = await commitQuickStartPlan(plan, caPem);
       setStep({ kind: 'walkthrough', plan, profileId });
     } catch (e) {
       show(`could not set up demo client · ${(e as Error).message}`);
@@ -67,17 +67,19 @@ export function HiveMQQuickStart() {
     <View style={styles.wrap}>
       <Text style={styles.title}>Try it live</Text>
       <Text style={styles.subtitle}>
-        One tap sets up a client on HiveMQ's public test broker, subscribes it
-        to a topic, and connects — nothing to configure.
+        One tap sets up a client on a public test broker, subscribes it to a
+        topic, and connects — nothing to configure. ecc tests mutual TLS with an
+        EC client certificate on test.mosquitto.org.
       </Text>
       <View style={styles.row}>
         {DEMO_VARIANTS.map(v => (
           <Pressable
-            key={v.transport}
+            key={v.id}
             style={styles.chip}
+            accessibilityLabel={`${v.brokerLabel} demo, ${v.label}`}
             onPress={() => onPickVariant(v)}
           >
-            <Text style={styles.chipText}>{v.scheme}</Text>
+            <Text style={styles.chipText}>{v.chip}</Text>
           </Pressable>
         ))}
       </View>
@@ -103,6 +105,9 @@ export function HiveMQQuickStart() {
                 />
                 <PlanRow label="Client ID" value={step.plan.clientId} mono />
                 <PlanRow label="Subscribes to" value={step.plan.topic} mono />
+                {step.plan.variant.clientCert && (
+                  <PlanRow label="Client cert" value="EC P-256 · mutual TLS" />
+                )}
               </View>
               {step.plan.reusingClient && (
                 <Text style={styles.hint}>
@@ -110,14 +115,22 @@ export function HiveMQQuickStart() {
                   reconnects it.
                 </Text>
               )}
-              {step.plan.variant.requiresCa && !HIVEMQ_TLS_CA_PEM && (
+              {step.plan.variant.requiresCa && !step.plan.variant.caPem && (
                 <Text style={styles.hint}>
                   This one is TLS-encrypted — you'll be asked to paste the
                   broker's CA certificate next.
                 </Text>
               )}
+              {step.plan.needsCertificate && (
+                <Text style={styles.hint}>
+                  Generates an EC P-256 key on this device and asks
+                  test.mosquitto.org's public signer for a client certificate
+                  (valid 90 days). Only the public key and the client ID leave
+                  the device.
+                </Text>
+              )}
               <Text style={styles.hint}>
-                broker.hivemq.com is a public, shared test broker — anyone can
+                {step.plan.host} is a public, shared test broker — anyone can
                 see what's published on it, so don't send anything sensitive.
               </Text>
               <View style={styles.actions}>
@@ -133,7 +146,11 @@ export function HiveMQQuickStart() {
                   onPress={() => onConfirm(step.plan)}
                 >
                   <Text style={styles.primaryText}>
-                    {busy ? 'Setting up…' : 'Set it up'}
+                    {busy
+                      ? step.plan.needsCertificate
+                        ? 'Requesting certificate…'
+                        : 'Setting up…'
+                      : 'Set it up'}
                   </Text>
                 </Pressable>
               </View>
@@ -144,7 +161,11 @@ export function HiveMQQuickStart() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>You're connected</Text>
               <Text style={styles.body}>
-                "{step.plan.brokerName}" is connecting to HiveMQ's public broker
+                "{step.plan.brokerName}" is connecting to{' '}
+                {step.plan.variant.brokerLabel}'s public broker
+                {step.plan.variant.clientCert
+                  ? ' with its own EC client certificate'
+                  : ''}{' '}
                 and is subscribed to{' '}
                 <Text style={styles.mono}>{step.plan.topic}</Text>.
               </Text>
@@ -205,7 +226,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 15, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 12.5, color: colors.textSecondary, lineHeight: 18 },
-  row: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  row: { flexDirection: 'row', gap: 6, marginTop: 4 },
   chip: {
     flex: 1,
     alignItems: 'center',
