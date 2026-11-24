@@ -7,7 +7,13 @@ import {
   getActiveSubscriptions,
   moveToActive,
 } from '../../storage/subscriptionRepo';
-import { certMetaFromPem } from '../../crypto/certInfo';
+import { certMetaFromPem, daysUntilExpiry } from '../../crypto/certInfo';
+import {
+  MOSQUITTO_CA_PEM,
+  MOSQUITTO_HOST,
+  MOSQUITTO_MTLS_PORT,
+  issueMosquittoEccIdentity,
+} from './mosquittoEcc';
 import { useProfilesStore } from '../../state/profilesStore';
 import { useConnectionsStore } from '../../state/connectionsStore';
 
@@ -48,55 +54,111 @@ rqXRfboQnoZsG4q5WTP468SQvvG5
 `;
 
 export interface DemoVariant {
+  id: 'mqtt' | 'mqtts' | 'ws' | 'wss' | 'ecc';
   transport: Transport;
   scheme: string;
+  /** Text on the one-tap chip. */
+  chip: string;
   label: string;
+  /** Short broker name for titles and copy, e.g. "HiveMQ". */
+  brokerLabel: string;
+  host: string;
   port: number;
   path?: string;
   requiresCa: boolean;
+  /** CA to pin for 'tls' variants; null means the user is asked to paste one. */
+  caPem?: string | null;
+  /** 'ecc': generate an EC P-256 key on the device and have test.mosquitto.org's
+   * public signer issue a client certificate for it (mutual TLS). */
+  clientCert?: 'ecc';
 }
 
 export const DEMO_VARIANTS: DemoVariant[] = [
   {
+    id: 'mqtt',
     transport: 'tcp',
     scheme: 'mqtt',
+    chip: 'mqtt',
     label: 'MQTT',
+    brokerLabel: 'HiveMQ',
+    host: HIVEMQ_HOST,
     port: 1883,
     requiresCa: false,
   },
   {
+    id: 'mqtts',
     transport: 'tls',
     scheme: 'mqtts',
+    chip: 'mqtts',
     label: 'MQTT over TLS',
+    brokerLabel: 'HiveMQ',
+    host: HIVEMQ_HOST,
     port: 8883,
     requiresCa: true,
+    caPem: HIVEMQ_TLS_CA_PEM,
   },
   {
+    id: 'ws',
     transport: 'ws',
     scheme: 'ws',
+    chip: 'ws',
     label: 'WebSocket',
+    brokerLabel: 'HiveMQ',
+    host: HIVEMQ_HOST,
     port: 8000,
     path: WS_PATH,
     requiresCa: false,
   },
   {
+    id: 'wss',
     transport: 'wss',
     scheme: 'wss',
+    chip: 'wss',
     label: 'WebSocket over TLS',
+    brokerLabel: 'HiveMQ',
+    host: HIVEMQ_HOST,
     port: 8884,
     path: WS_PATH,
     requiresCa: false,
   },
+  {
+    id: 'ecc',
+    transport: 'tls',
+    scheme: 'mqtts',
+    chip: 'ecc',
+    label: 'Mutual TLS with an EC client certificate',
+    brokerLabel: 'Mosquitto',
+    host: MOSQUITTO_HOST,
+    port: MOSQUITTO_MTLS_PORT,
+    requiresCa: true,
+    caPem: MOSQUITTO_CA_PEM,
+    clientCert: 'ecc',
+  },
 ];
 
+// Re-request the demo certificate when it has this little validity left, so a tap
+// doesn't set up a client that stops connecting a day later.
+const CERT_RENEW_DAYS = 2;
+
 function demoName(variant: DemoVariant): string {
-  return `HiveMQ demo · ${variant.scheme}`;
+  return `${variant.brokerLabel} demo · ${
+    variant.clientCert ? 'mtls-ecc' : variant.scheme
+  }`;
 }
 
 function randomHex(bytes: number): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(bytes)))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
+}
+
+function findDemoBroker(variant: DemoVariant) {
+  return listBrokers().find(
+    b =>
+      b.host === variant.host &&
+      b.transport === variant.transport &&
+      b.port === variant.port,
+  );
 }
 
 export interface QuickStartPlan {
@@ -112,6 +174,13 @@ export interface QuickStartPlan {
   // already saved from an earlier tap) — shown in the confirmation screen so a repeat
   // tap doesn't claim it's about to add a second broker it's actually just reusing.
   reusingBroker: boolean;
+  /** A client certificate will be requested (first tap, or the old one is expiring). */
+  needsCertificate: boolean;
+}
+
+function identityNeedsRenewal(profile?: ConnectionProfile): boolean {
+  const notAfter = profile?.tls?.identity?.certMeta.notAfter;
+  return !notAfter || daysUntilExpiry(notAfter) <= CERT_RENEW_DAYS;
 }
 
 /** Pure — computes exactly what a tap on `variant` would set up, without writing
@@ -120,15 +189,12 @@ export interface QuickStartPlan {
  * already set up once) before anything happens. */
 export function buildQuickStartPlan(variant: DemoVariant): QuickStartPlan {
   const name = demoName(variant);
-  const existingBroker = listBrokers().find(
-    b =>
-      b.host === HIVEMQ_HOST &&
-      b.transport === variant.transport &&
-      b.port === variant.port,
-  );
+  const existingBroker = findDemoBroker(variant);
   const existingProfile = existingBroker
     ? listProfiles().find(p => p.brokerId === existingBroker.id)
     : undefined;
+  const needsCertificate =
+    !!variant.clientCert && identityNeedsRenewal(existingProfile);
 
   if (existingProfile) {
     const [existingSub] = getActiveSubscriptions(existingProfile.id);
@@ -137,11 +203,12 @@ export function buildQuickStartPlan(variant: DemoVariant): QuickStartPlan {
       reusingClient: true,
       reusingBroker: true,
       brokerName: name,
-      host: HIVEMQ_HOST,
+      host: variant.host,
       port: variant.port,
       path: variant.path,
       clientId: existingProfile.clientId,
       topic: existingSub?.topic ?? `mqtt-connect/demo/${randomHex(4)}`,
+      needsCertificate,
     };
   }
 
@@ -150,37 +217,41 @@ export function buildQuickStartPlan(variant: DemoVariant): QuickStartPlan {
     reusingClient: false,
     reusingBroker: !!existingBroker,
     brokerName: name,
-    host: HIVEMQ_HOST,
+    host: variant.host,
     port: variant.port,
     path: variant.path,
     clientId: `mqtt-connect-demo-${randomHex(4)}`,
     topic: `mqtt-connect/demo/${randomHex(4)}`,
+    needsCertificate,
   };
 }
 
 /** Executes a previously-built plan: creates (or reuses) the broker and client profile,
- * persists the topic subscription so it's picked up automatically on connect, and
- * starts connecting. `caPem` is required and used only for the 'tls' variant when
- * `HIVEMQ_TLS_CA_PEM` hasn't been filled in — see that constant's comment. */
-export function commitQuickStartPlan(
+ * requests a client certificate first for the ECC variant (network call), persists the
+ * topic subscription so it's picked up automatically on connect, and starts connecting.
+ * `caPem` is used only for a 'tls' variant whose `caPem` hasn't been filled in. */
+export async function commitQuickStartPlan(
   plan: QuickStartPlan,
   caPem?: string,
-): { profileId: string } {
+): Promise<{ profileId: string }> {
+  const { variant } = plan;
+
+  // Network first, so a signer failure leaves nothing half-created behind.
+  const issued =
+    variant.clientCert && plan.needsCertificate
+      ? await issueMosquittoEccIdentity(plan.clientId)
+      : undefined;
+
   const now = new Date().toISOString();
 
-  let broker = listBrokers().find(
-    b =>
-      b.host === plan.host &&
-      b.transport === plan.variant.transport &&
-      b.port === plan.port,
-  );
+  let broker = findDemoBroker(variant);
   if (!broker) {
     broker = {
       id: newBrokerId(),
       name: plan.brokerName,
       host: plan.host,
       port: plan.port,
-      transport: plan.variant.transport,
+      transport: variant.transport,
       path: plan.path,
       createdAt: now,
       updatedAt: now,
@@ -191,8 +262,8 @@ export function commitQuickStartPlan(
   let profile = listProfiles().find(p => p.brokerId === broker!.id);
   if (!profile) {
     let tls: ConnectionProfile['tls'];
-    if (plan.variant.requiresCa) {
-      const pem = HIVEMQ_TLS_CA_PEM ?? caPem;
+    if (variant.requiresCa) {
+      const pem = variant.caPem ?? caPem;
       if (!pem) {
         throw new Error(
           'A CA certificate is required for this connection but none was provided.',
@@ -203,11 +274,12 @@ export function commitQuickStartPlan(
       tls = { caRef, caMeta: certMetaFromPem(pem) };
     }
 
+    const id = newProfileId();
     profile = {
-      id: newProfileId(),
+      id,
       schemaVersion: 2,
       name: plan.brokerName,
-      sigil: 'HQ',
+      sigil: variant.clientCert ? 'MQ' : 'HQ',
       brokerId: broker.id,
       clientId: plan.clientId,
       protocolVersion: 5,
@@ -224,6 +296,40 @@ export function commitQuickStartPlan(
       createdAt: now,
       updatedAt: now,
     };
+  }
+
+  if (issued) {
+    if (!profile.tls) {
+      throw new Error(
+        'This demo client has no TLS settings to attach a certificate to.',
+      );
+    }
+    // Renewal overwrites the same secrets and Keychain aliases in place; the iOS
+    // transport deletes and re-adds the identity under its alias on every connect.
+    const prev = profile.tls.identity;
+    const certRef = prev?.certRef ?? newSecretId();
+    const keyRef = prev?.keyRef ?? newSecretId();
+    setSecret(certRef, issued.certPem);
+    setSecret(keyRef, issued.keyPem);
+    profile = {
+      ...profile,
+      tls: {
+        ...profile.tls,
+        identity: {
+          certRef,
+          keyRef,
+          keyAlgorithm: 'EC',
+          keySizeBits: issued.key.keySizeBits,
+          certMeta: certMetaFromPem(issued.certPem),
+          iosCertAlias: prev?.iosCertAlias ?? `${profile.id}-cert`,
+          iosKeyAlias: prev?.iosKeyAlias ?? `${profile.id}-key`,
+        },
+      },
+      updatedAt: now,
+    };
+  }
+
+  if (issued || !listProfiles().some(p => p.id === profile!.id)) {
     useProfilesStore.getState().save(profile);
   }
 
